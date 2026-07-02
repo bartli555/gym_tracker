@@ -28,3 +28,38 @@ set_3.show_info()
 
 # Testujemy Twoją metodę calculate_volume()
 print(f"Objętość RDL: {set_3.calculate_volume()} kg")
+
+# -----------------------------------------------------
+
+class Workout:
+    def __init__(self, date, target_muscle):
+        self.date = date
+        self.target_muscle = target_muscle
+        # Tworzymy listę do której będziemy wrzucać obiekty, klasy TrainingSet
+        self.sets = []
+        
+    def add_set(self, training_set):
+        #Ta metoda dorzuca nową serię do naszej listy
+        self.sets.append(training_set)
+        print(f"Dodano nową serię: {training_set.exercise_name}" do treningu z dnia: {training_set.date}.)
+
+    def calculate_total_volume(self):
+        total_volume = 0
+        for seria in self.sets:
+            
+        return total_volume
+
+        pass
+
+# --- TESTOWANIE KOMPOZYCJI ---
+# 1. Tworzymy nowy trening
+dzisiejszy_trening = Workout("2026-07-02", "Nogi & Push")
+
+# 2. Dorzucamy serie (obiekty set_1, set_2, set_3 stworzyliśmy w poprzednim zadaniu)
+dzisiejszy_trening.add.set(set_1)
+dzisiejszy_trening.add.set(set_2)
+dzisiejszy_trening.add.set(set_3)
+
+# 3. Odpalamy Twoją nową funkcję liczącą sumę
+print(f"PODSUMOWANIE:")
+print(f"Całkowity tonaż dzisiejszej sesji to: {dzisiejszy_trening.calculate_total_volume()} kg")
