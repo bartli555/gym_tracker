@@ -1,4 +1,5 @@
 import json
+import os
 
 class BodyWeightLog:
     def __init__(self, date, weight, notes=""):
@@ -15,16 +16,24 @@ class BodyWeightLog:
                 "date": self.date,
                 "weight": self.weight,
                 "notes": self.notes
-            }
+        }
 
-            # 2. Tworzymy nazwę pliku (inną niż dla treningu, żeby zachować porządek)
-        filename = f"waga_{self.date}.json"
+        # 2. Definiujemy nazwę naszego folderu na logi
+        folder_name ="logs"
 
-            # 3. Zapis na dysk
-        with open(filename, "w", encoding="utf-8") as file:
+        # 3. Jeśli folder 'logs' nie istnieje w naszym projekcie, Python go tworzy    
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+
+        # 3. worzymy pełną ścieżkę do pliku (np. logs/waga_2026-07-03.json)
+        filename = f"Waga_{self.date}.json"
+        filepath = os.path.join(folder_name, filename)
+
+        # 4. Zapisujemy plik używając nowej ścieżki
+        with open(filepath, "w", encoding="utf-8") as file:
             json.dump(weight_data, file, indent=4, ensure_ascii=False)
 
-        print(f"Zapisano wagę {self.weight} w pliku {filename}")
+        print(f"Zapisano wagę {self.weight} w folderze {filepath}")
         pass
 
 
@@ -99,10 +108,18 @@ class Workout:
                     "volume": seria.calculate_volume()
                 })
             
-            # 3. Zapisujemy zgrabny plik na dysku z dzisiejszą datą w nazwie
+            # 2. Definiujemy nazwę naszego folderu na logi           
+            folder_name ="logs"
+
+            # 3. Jeśli folder 'logs' nie istnieje w naszym projekcie, Python go tworzy    
+            if not os.path.exists(folder_name):
+                os.makedirs(folder_name)
+            
+            # 3. # 3. worzymy pełną ścieżkę do pliku (np. logs/training_2026-07-03.json)
             filename = f"training{self.date}.json"
+            filepath = os.path.join(folder_name, filename)
         
-            with open (filename, 'w', encoding="UTF-8") as file:
+            with open (filepath, 'w', encoding="UTF-8") as file:
                 json.dump(workout_data, file, indent=4, ensure_ascii=False)
         
         print(f"Zapisano w pliku {filename}")
