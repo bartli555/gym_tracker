@@ -1,3 +1,5 @@
+import json
+
 class TrainingSet:
     # To jest konstruktor - odpala się przy tworzeniu każdej nowej serii
     def __init__(self, exercise_name, weight, reps):
@@ -41,13 +43,40 @@ class Workout:
     def add_set(self, training_set):
         #Ta metoda dorzuca nową serię do naszej listy
         self.sets.append(training_set)
-        print(f"Dodano nową serię: {training_set.exercise_name}" do treningu z dnia: {training_set.date}.)
+        print(f"Dodano nową serię: {training_set.exercise_name} do treningu z dnia: {self.date}.")
 
     def calculate_total_volume(self):
         total_volume = 0
+        # Pętla przechodzi przez każdy element na liście 'self.sets'
         for seria in self.sets:
-            
+            # Do obecnej sumy dodajemy wynik obliczony przez pojedynczą serię
+            total_volume += seria.calculate_volume()
         return total_volume
+
+    def save_to_json(self):
+        # 1. Tworzymy główny słownik z informacjami o sesji 
+        workout_data = {
+            "date": self.date,
+            "target_muscle": self.target_muscle,
+            "total_tonnage": self.calculate_total_volume(),
+            "exercises": []
+        }
+            # 2. Wyciągamy szczegóły każdej pojedynczej serii
+        for seria in self.sets:
+            workout_data["exercises"].append({
+                    "name": seria.exercise_name,
+                    "weight": seria.weight,
+                    "reps": seria.reps,
+                    "volume": seria.calculate_volume()
+                })
+            
+            # 3. Zapisujemy zgrabny plik na dysku z dzisiejszą datą w nazwie
+            filename = f"training{self.date}.json"
+        
+            with open (filename, 'w', encoding="UTF-8") as file:
+                json.dump(workout_data, file, indent=4, ensure_ascii=False)
+        
+        print(f"Zapisano w pliku {filename}")
 
         pass
 
@@ -56,9 +85,12 @@ class Workout:
 dzisiejszy_trening = Workout("2026-07-02", "Nogi & Push")
 
 # 2. Dorzucamy serie (obiekty set_1, set_2, set_3 stworzyliśmy w poprzednim zadaniu)
-dzisiejszy_trening.add.set(set_1)
-dzisiejszy_trening.add.set(set_2)
-dzisiejszy_trening.add.set(set_3)
+dzisiejszy_trening.add_set(set_1)
+dzisiejszy_trening.add_set(set_2)
+dzisiejszy_trening.add_set(set_3)
+
+# Zapisujemy nasz trening do pliku!
+dzisiejszy_trening.save_to_json()
 
 # 3. Odpalamy Twoją nową funkcję liczącą sumę
 print(f"PODSUMOWANIE:")
