@@ -1,0 +1,25 @@
+{
+    "date": "2026-07-07",
+    "target_muscle": "Nogi i brzuch",
+    "total_tonnage": 1780.0,
+    "exercises": [
+        {
+            "name": "Front Squat",
+            "weight": 100.0,
+            "reps": 5,
+            "volume": 500.0
+        },
+        {
+            "name": "RDL",
+            "weight": 130.0,
+            "reps": 6,
+            "volume": 780.0
+        },
+        {
+            "name": "Izolacje",
+            "weight": 50.0,
+            "reps": 10,
+            "volume": 500.0
+        }
+    ]
+}

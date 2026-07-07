@@ -1,0 +1,19 @@
+{
+    "date": "2026",
+    "target_muscle": "Góra",
+    "total_tonnage": 950.0,
+    "exercises": [
+        {
+            "name": "Bench press",
+            "weight": 100.0,
+            "reps": 5,
+            "volume": 500.0
+        },
+        {
+            "name": "Pull Ups",
+            "weight": 90.0,
+            "reps": 5,
+            "volume": 450.0
+        }
+    ]
+}
