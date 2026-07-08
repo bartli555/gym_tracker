@@ -1,5 +1,6 @@
 import json
 import os
+import csv
 
 class BodyWeightLog:
     def __init__(self, date, weight, notes=""):
@@ -244,6 +245,51 @@ def analyze_history():
     else:
         print("Nie znaleziono żadnych treningów :(")                
 
+def export_to_csv():
+    folder_name = "logs"
+    csv_filename = os.path.join(folder_name, "workout_history.csv")
+
+    if not os.path.exists(folder_name):
+        print("Błąd. Folder logs nie istnieje")
+        return
+    
+    # Nagłówki kolumn w naszym pliku CSV
+    headers = ['Data', 'Partia miesniowa', 'Cwiczenie', 'Ciezar (kg)', 'Powtorzenia', 'Tonaz serii (kg)']
+
+    licznik_serii = 0
+
+    print("\n Rozpoczynam eksport danych")
+
+    # Otwieramy plik CSV do zapisu
+    with open(csv_filename, mode='w', newline='' ,encoding='utf-8') as csv_file:
+        writer = csv.writer(csv_file, delimiter=';') # Średnik pozwala na łatwiejsze otwarcie w polskim Excelu
+        writer.writerow(headers) # Zapisujemy nagłówki na samej górze
+
+        # Skanujemy folder identycznie jak przy analizie
+        for filename in os.listdir(folder_name):
+            if filename.startswith("training") and filename.endswith(".json"):
+                filepath = os.path.join(folder_name, filename)
+
+                with open(filepath, 'r', encoding='utf-8') as json_file:
+                    data = json.load(json_file)
+
+                data_treningu = data['date']
+                partia = data['target_muscle']
+
+               # Wyciągamy każdą pojedynczą serię jako osobny wiersz w tabeli
+
+                for ex in data['exercises']:
+                   cwiczenie = ex['name']
+                   ciezar = ex['weight']
+                   powtorzenia = ex['reps']
+                   tonaz_serii = ciezar * powtorzenia
+
+                   # Zapisujemy gotowy wiersz do pliku CSV
+                   writer.writerow([data_treningu, partia, cwiczenie, ciezar, powtorzenia, tonaz_serii])
+                   licznik_serii += 1
+
+    print(f'Elegancko!. Wyeksportowano {licznik_serii} serii do pliku {csv_filename}')                   
+
 def main_menu():
     while True:
         print("\n" + "="*35)
@@ -254,10 +300,11 @@ def main_menu():
         print("3. Przejrzyj historię wagi")
         print("4. Odczyt treningu z konkretnego dnia")
         print("5. Analiza historii treningów")
-        print("6. Wyjście z programu")
+        print("6. Eksportuj do pliku CSV")
+        print("7. Wyjście z programu")
         print("="*35)
 
-        wybor = input("Wybierz opcję 1-6: ")
+        wybor = input("Wybierz opcję 1-7: ")
 
         if wybor == "1":
             print("\n ---Dodawanie wagi--- ")
@@ -316,11 +363,16 @@ def main_menu():
             analyze_history()
 
         elif wybor == "6":
+            print("\n Eksport do pliku CSV")
+            # Wywołujemy funkcję, która już istnieje w kodzie!
+            export_to_csv()
+
+        elif wybor == "7":
             print("\n Zamykam, do zobaczenia na treningu. ")
             break # To słowo kluczowe ostatecznie przerywa główną pętlę
 
         else:
-            print("/n Nieznana opcja. Wybierz 1, 2, 3, 4, 5 lub 6. ")
+            print("/n Nieznana opcja. Wybierz 1, 2, 3, 4, 5, 6 lub 7. ")
 
 # To jest standardowy sposób odpalania głównej funkcji w Pythonie
 if __name__ == "__main__":
