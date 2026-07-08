@@ -199,6 +199,51 @@ def load_workout(date):
         print(f"Błąd. Nie znaleziono pliku z dnia {date}.")
         return None    
 
+def analyze_history():
+    folder_name = "logs"
+    if not os.path.exists(folder_name):
+        print("Błąd. Folder logs nie istnieje")
+        return
+    
+    total_volume = 0
+    workout_count = 0
+
+    print ("\n ---Analiza historii treningów--- ")
+
+    #os.listdir() skanuje cały folder i zwraca listę plików
+    for filename in os.listdir(folder_name):
+
+        # Filtrujemy: interesują nas tylko pliki treningowe z rozszerzeniem .json
+        if filename.startswith("training") and filename.endswith(".json"):
+            filepath = os.path.join(folder_name, filename)
+
+            with open(filepath, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+
+                # Szybka rekonstrukcja obiektu, żeby użyć metody calculate_total_volume()
+                temp_workout = Workout(data["date"], data["target_muscle"])
+                for ex in data["exercises"]:
+                    temp_set = TrainingSet(ex["name"], ex["weight"], ex["reps"])
+                    temp_workout.add_set(temp_set)
+
+                # Zbieranie danych do statystyk
+                session_volume = temp_workout.calculate_total_volume()
+                total_volume += session_volume
+                workout_count += 1
+
+                print(f"{data['date']} {data['target_muscle']}: {session_volume} kg")    
+
+    # Podsumowanie wyliczane tylko, jeśli znaleziono chociaż jeden trening
+    if workout_count > 0:
+        srednia = total_volume / workout_count
+        print("-" *35)
+        print('Podsumowanie')
+        print(f"Liczba odbytych treningów: {workout_count}")
+        print(f"Łączny przerzucony ciężar: {total_volume}")
+        print(f"Średni tonaż na sesję: {srednia:.2f} kg")
+    else:
+        print("Nie znaleziono żadnych treningów :(")                
+
 def main_menu():
     while True:
         print("\n" + "="*35)
@@ -208,10 +253,11 @@ def main_menu():
         print("2. Dodaj nowy trening")
         print("3. Przejrzyj historię wagi")
         print("4. Odczyt treningu z konkretnego dnia")
-        print("5. Wyjście z programu")
+        print("5. Analiza historii treningów")
+        print("6. Wyjście z programu")
         print("="*35)
 
-        wybor = input("Wybierz opcję 1-5:")
+        wybor = input("Wybierz opcję 1-6: ")
 
         if wybor == "1":
             print("\n ---Dodawanie wagi--- ")
@@ -265,11 +311,16 @@ def main_menu():
             load_workout(data)
 
         elif wybor == "5":
+            print("\n Analza historii treningów")
+            # Wywołujemy funkcję, która już istnieje w kodzie!
+            analyze_history()
+
+        elif wybor == "6":
             print("\n Zamykam, do zobaczenia na treningu. ")
             break # To słowo kluczowe ostatecznie przerywa główną pętlę
 
         else:
-            print("/n Nieznana opcja. Wybierz 1, 2, 3, 4 lub 5. ")
+            print("/n Nieznana opcja. Wybierz 1, 2, 3, 4, 5 lub 6. ")
 
 # To jest standardowy sposób odpalania głównej funkcji w Pythonie
 if __name__ == "__main__":
