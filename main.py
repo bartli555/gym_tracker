@@ -1,6 +1,7 @@
 import json
 import os
 import csv
+import sqlite3
 
 class BodyWeightLog:
     def __init__(self, date, weight, notes=""):
@@ -126,6 +127,86 @@ class Workout:
         print(f"Zapisano w pliku {filename}")
 
         pass
+
+    def save_to_db(self):
+        # 1. Otwieramy połączenie z naszym sejfem
+        conn = sqlite3.connect('gym_tracker.db')
+        cursor = conn.cursor()
+
+        # --- BEZPIECZNIK: Tworzymy tabele, jeśli by ich brakowało ---
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS workouts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                target_muscle TEXT NOT NULL
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS training_sets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                workout_id INTEGER,
+                exercise_name TEXT NOT NULL,
+                weight REAL NOT NULL,
+                reps INTEGER NOT NULL,
+                FOREIGN KEY (workout_id) REFERENCES workouts (id)
+            )
+        ''')
+        # -------------------------------------------------------------
+
+        # 2. Wrzucamy główny trening do tabeli 'workouts'
+        # Znak zapytania (?) to zabezpieczenie przed tzw. SQL Injection
+        cursor.execute('''
+            INSERT INTO workouts (date, target_muscle)
+            VALUES  (?, ?)
+        ''', (self.date, self.target_muscle))
+
+        # 3. Pobieramy ID tego nowo dodanego treningu (Klucz Główny)
+        workout_id = cursor.lastrowid
+
+        # 4. Pętla wrzucająca poszczególne serie do tabeli 'training_sets'
+        # Każda seria dostaje 'workout_id', żeby wiedziała, do jakiego treningu należy
+        for s in self.sets:
+            cursor.execute('''
+                INSERT INTO training_sets (workout_id, exercise_name, weight, reps)
+                VALUES (?, ?, ?, ?)  
+            ''', (workout_id, s.exercise_name, s.weight, s.reps))
+
+        # 5. Zatwierdzamy zmiany i zamykamy drzwi do bazy
+        conn.commit()
+        conn.close()
+
+        print(f"Baza danych: Trening z {self.date} zapisany w tabelach SQLite!")
+
+def setup_database():
+    # Tworzymy połączenie z plikiem bazy (stworzy się sam, jeśli nie istnieje)
+    conn = sqlite3.connect('gym_tracker.db')
+    cursor = conn.cursor()
+
+    # Tworzymy tabelę dla głównych treningów
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workouts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            target_muscle TEXT NOT NULL                      
+        )
+    ''')
+
+# Tworzymy tabelę dla poszczególnych serii
+# FOREIGN KEY to tzw. klucz obcy – łączy daną serię z konkretnym id treningu
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS trainig_sets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            workout_id INTEGER,
+            exercise_name TEXT NOT NULL,
+            weight REAL NOT NULL,
+            reps INTEGER NOT NULL,
+            FOREIGN KEY (workout_id) REFERENCES workouts (id)                   
+        )
+    ''')
+
+    # Zapisujemy zmiany i zamykamy połączenie
+    conn.commit()
+    conn.close()
 
 # --- TESTOWANIE KOMPOZYCJI ---
 # 1. Tworzymy nowy trening
@@ -343,7 +424,7 @@ def main_menu():
                     print("Błąd. Ciężar i powtórzenia muszą być liczbami!")
 
             # Gdy wyjdziemy z pętli wpisywania serii, zapisujemy cały trening
-            nowy_trening.save_to_json()
+            nowy_trening.save_to_db()
 
         elif wybor == "3":
             print("\n Odczyt wagi ")
@@ -376,6 +457,7 @@ def main_menu():
 
 # To jest standardowy sposób odpalania głównej funkcji w Pythonie
 if __name__ == "__main__":
+    setup_database()
     main_menu()
 
 
