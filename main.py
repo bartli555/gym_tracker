@@ -253,6 +253,7 @@ def load_weight_log(date):
 # wczytane_dane = load_weight_log("2026-07-03")            
 
 def load_workout(date):
+
     # 1. Łączymy się z bazą
     conn = sqlite3.connect('gym_tracker.db')
     cursor = conn.cursor()
@@ -289,6 +290,35 @@ def load_workout(date):
 
     print(f"Elegancko. Wczytano trening '{restored_workout.target_muscle}' z dnia {restored_workout.date}")    
     print(f"Całkowity tonaż tej sesji to {restored_workout.calculate_total_volume()} kg.")
+
+    # 1. Szukamy odpowiedniego pliku w folderze logs
+    filepath = os.path.join("logs", f"training{date}.json")
+
+    if os.path.exists(filepath):
+        with open (filepath, 'r', encoding="utf-8") as file:
+            data = json.load(file)
+
+            # 2. Odtwarzamy główny obiekt treningu
+            restored_workout = Workout(data["date"], data["target_muscle"])
+
+            # 3. Pętla, która przechodzi przez każdą zapisaną serię
+            for ex in data["exercises"]:
+                # Tworzymy obiekt serii na podstawie danych z pliku JSON
+                restored_set = TrainingSet(ex["name"], ex["weight"], ex["reps"])
+
+                # Dodajemy serię do zrekonstruowanego treningu
+                restored_workout.add_set(restored_set)
+
+            # 4. Wyświetlamy podsumowanie, żeby potwierdzić, że tonaż się zgadza
+            print(f"Sukces. Wczytano trening '{restored_workout.target_muscle}' z dnia '{restored_workout.date}")
+            print(f"Całkowity tonaż tej sesji to: '{restored_workout.calculate_total_volume()}' kg.")
+
+            # Zwracamy gotowy, pełnoprawny obiekt (przyda się w przyszłości do wykresów)
+            return restored_workout
+    else:
+        print(f"Błąd. Nie znaleziono pliku z dnia {date}.")
+        return None    
+
 
 def analyze_history():
     folder_name = "logs"
