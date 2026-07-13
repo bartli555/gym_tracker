@@ -410,6 +410,31 @@ def export_to_csv():
 
     print(f'Elegancko!. Wyeksportowano {licznik_serii} serii do pliku {csv_filename}')                   
 
+def calculate_all_time_tonage():
+    conn = sqlite3.connect('gym_tracker.db')
+    cursor = conn.cursor()
+
+    # Silnik SQL robi całą brudną robotę za nas!
+    cursor.execute('''
+        SELECT w.date, w.target_muscle, SUM(t.weight * t.reps) as total_tonnage
+        FROM workouts w 
+        JOIN training_sets t ON w.id = t.workout_id
+        GROUP BY w.id
+        ORDER BY w.date                   
+    ''')
+
+    results = cursor.fetchall()
+    conn.close()
+
+    print("\n --- Historia progresywnego przeładowania --- ")
+    if not results:
+        print("Brak treningów w bazie. Idź przerzucać żelastwo.")
+    else:
+        for row in results:
+        # row[0] = data, row[1] = partia, row[2] = podliczony tonaż
+            print(f"Data: {row[0]} | Partia: {row[1]:<10} | Całkowity tonaż: {row[2]} kg.")
+    
+
 def main_menu():
     while True:
         print("\n" + "="*35)
@@ -421,10 +446,11 @@ def main_menu():
         print("4. Odczyt treningu z konkretnego dnia")
         print("5. Analiza historii treningów")
         print("6. Eksportuj do pliku CSV")
-        print("7. Wyjście z programu")
+        print("7. Historia progresywnego przeładowania")
+        print("8. Wyjście z programu")
         print("="*35)
 
-        wybor = input("Wybierz opcję 1-7: ")
+        wybor = input("Wybierz opcję 1-8: ")
 
         if wybor == "1":
             print("\n ---Dodawanie wagi--- ")
@@ -488,11 +514,16 @@ def main_menu():
             export_to_csv()
 
         elif wybor == "7":
+            print("\n Historia progresywnego przeładowania")
+            # Wywołujemy funkcję, która już istnieje w kodzie!
+            calculate_all_time_tonage()    
+
+        elif wybor == "8":
             print("\n Zamykam, do zobaczenia na treningu. ")
             break # To słowo kluczowe ostatecznie przerywa główną pętlę
 
         else:
-            print("/n Nieznana opcja. Wybierz 1, 2, 3, 4, 5, 6 lub 7. ")
+            print("/n Nieznana opcja. Wybierz 1, 2, 3, 4, 5, 6, 7 lub 8. ")
 
 # To jest standardowy sposób odpalania głównej funkcji w Pythonie
 if __name__ == "__main__":
