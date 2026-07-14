@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from workout import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Pusta ścieżka '' oznacza stronę główną (http://127.0.0.1:8080/)
+    path('', views.dashboard, name='dashboard'),
 ]
