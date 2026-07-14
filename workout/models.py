@@ -12,6 +12,8 @@ class Workout(models.Model):
 class TrainingSet(models.Model):
     # Klucz obcy (FOREIGN KEY) - łączy serię z konkretnym treningiem
     workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='sets')
+    exercise = models.CharField(max_length=100, default="Nieznane")
+    set_number = models.PositiveIntegerField(default=1, verbose_name="Numer serii")
     weight = models.FloatField()
     reps = models.IntegerField()
 
