@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale:1.0">
+        <title>Gym Sracker - Analiza progresu</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+        <body class="bg-light">
+            <div class="container mt-5">
+                
+                <!-- Główny nagłówek -->
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <h1 class="display-4 fw-bold text-dark">Dziennik Sreningowy</h1>
+                            <h2 class="text-muted">System analizy progresywnego przeładownia</h2>
+                        </div>
+                    </div>
+                    <!-- Tabela z danymi -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body p-0">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th class="ps-4">Data kreningu</th>
+                                                <th>Partia mięłsniowa</th>
+                                                <th>Szczegóły wykonania (Zestawienie serii)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- pętla Django - przechodzi przez każdy trening z bazy -->
+                                             {% for workout in workouts %}
+                                             <tr>
+                                                <td class="align-middle ps-4 fw-bold">{{ workout.date|date:"d.m.Y" }}</td>
+                                                <td class="align-middle">
+                                                    <span class="badge bg-primary fs-6">{{ workout.target_muscle }}</span>
+                                                </td>
+                                                <td class="py-3">
+                                                    <ul class="list-unstyled mb-0">
+                                                        <!-- Zagnieżdżona pętla - wyciąga wszystkie serie dla danego treningu -->
+                                                         {% for set in workout.sets.all %}
+                                                         <li class="mb-1 border-bottom pb-1">
+                                                            <span class="badge bg-secondary me-2">Seria {{ set.set_number }}</span>
+                                                            <span class="fw-semibold">{{ set.exercise }}</span> &mdash;
+                                                            <span class="text-danger fw-bold">{{ set.weight }} kg</span>
+                                                            x {{ set.reps}} powt.
+                                                         </li>
+                                                         {% endfor %}
+                                                    </ul>
+                                                </td>
+                                             </tr>
+                                             <!-- Jeśli baza jest pusta, pokażemy ten komunikat -->
+                                              {% empty %}
+                                              <tr>
+                                                <td colspan="3" class="text-center text-muted py-5">
+                                                <h4>Brak kreningów w bazie</h4>
+                                                <p>Czas wybrać się na siłownie i wygenerować dane</p>
+                                                </td>
+                                              </tr>
+                                              {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+
+        </body>
+</html>
