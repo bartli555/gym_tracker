@@ -39,6 +39,7 @@
                                                 <td class="align-middle ps-4 fw-bold">{{ workout.date|date:"d.m.Y" }}</td>
                                                 <td class="align-middle">
                                                     <span class="badge bg-primary fs-6">{{ workout.target_muscle }}</span>
+                                                    <a href="{% url 'workout_detail' workout.pk %}" class="btn btn-sm btn-outline-primary ms-2">Otwórz sesję</a>
                                                 </td>
                                                 <td class="py-3">
                                                     <ul class="list-unstyled mb-0">

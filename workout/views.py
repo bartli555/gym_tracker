@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
-from .models import Workout
-from .forms import WorkoutForm
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Workout, TrainingSet
+from .forms import WorkoutForm, TrainingSetForm
 
 def dashboard(request):
     # Wyciągamy z bazy wszystkie treningi, posortowane od najnowszego
@@ -24,3 +24,29 @@ def add_workout(request):
             form = WorkoutForm()
 
     return render(request, 'workout/add_workout.html', {'form': form})
+
+def workout_detail(request, pk):
+     # Wyciągamy konkretny trening z bazy na podstawie jego ID (pk - primary key)
+     workout = get_object_or_404(Workout, pk=pk)
+
+     if request.method == 'POST':
+          form = TrainingSetForm(request.POST)
+          if form.is_valid():
+               # INŻYNIERYJNY TRIK: Tworzymy paczkę z danymi, ale wstrzymujemy zapis do bazy (commit=False)
+               new_set = form.save(commit=False)
+               # Ręcznie "przypinamy" tę serię do obecnego treningu
+               new_set.workout = workout
+               # Dopiero teraz wysyłamy wszystko do bazy SQL
+               new_set.save()
+
+               # Przeładowujemy stronę, żeby wyświetlić nową serię
+               return redirect('workout_detail', pk=workout.pk)
+     else:
+          form = TrainingSetForm()
+
+     context = {
+          'workout': workout,
+          'form': form,
+          'sets': workout.sets.all().order_by('id') # Wyciągamy dodane już serie
+     }           
+     return render(request, 'workout/workout_detail.html', context)       
