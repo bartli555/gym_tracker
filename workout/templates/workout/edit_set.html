@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Edytuj Set Ruro</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <body class="bg-light">
+            <div class="conatiner mt-5" style="max-width: 500px;">
+                <div class="card shadow border-0">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0 fw-bold">Edytuj wynik</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form.as_p }} <!-- Szybki render całego formularza -->
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-succes fw-bold">Zapisz poprawki</button>
+                                <a href="{% url 'workout_detail' training_set.workout.id %}" class="btn btn-outline-secondary">Anuluj</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </body>
+    </head>
+</html>

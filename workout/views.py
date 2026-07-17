@@ -49,4 +49,29 @@ def workout_detail(request, pk):
           'form': form,
           'sets': workout.sets.all().order_by('id') # Wyciągamy dodane już serie
      }           
-     return render(request, 'workout/workout_detail.html', context)       
+     return render(request, 'workout/workout_detail.html', context)
+
+def delete_set(request, set_id):
+     # Znajdujemy konkretną serię w bazie
+     training_set = get_object_or_404(TrainingSet, id=set_id)
+     # Zapisujemy ID treningu, żeby wiedzieć, gdzie wrócić po usunięciu
+     workout_id = training_set.workout.id
+     # Usuwamy!
+     training_set.delete()
+     return redirect('workout_detail', pk=workout_id)
+
+def edit_set(request, set_id):
+    training_set = get_object_or_404(TrainingSet, id=set_id)
+    workout_id = training_set.workout.id
+
+    if request.method == "POST":
+        # Przekazujemy instance, aby Django nadpisało ten konkretny wpis
+        form = TrainingSetForm(request.POST, instance=training_set)
+        if form.is_valid():
+            form.save()
+            return redirect('workout_detail', pk=workout_id)
+    else:
+            # Ładujemy formularz wypełniony obecnymi danymi z bazy
+            form = TrainingSetForm(instance=training_set)   
+
+    return render(request, 'workout/edit_set.html', {'form': form, 'training_set': training_set})
