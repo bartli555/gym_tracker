@@ -8,6 +8,11 @@ class Workout(models.Model):
     def __str__(self):
         return f"{self.date} - {self.target_muscle}"
 
+    @property
+    def total_tonnage(self):
+        # Pyta wyciąga wszystkie serie, mnoży ciężar przez powtórzenia i sumuje całość
+        return sum(seria.weight * seria.reps for seria in self.sets.all())
+
 # To zastępuje naszą tabelę "training_sets"
 class TrainingSet(models.Model):
     # Klucz obcy (FOREIGN KEY) - łączy serię z konkretnym treningiem

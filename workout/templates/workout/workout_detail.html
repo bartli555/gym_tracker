@@ -14,6 +14,8 @@
                             <div>
                                 <h3 class="fw-bold mb-1">Trening: {{workout.date|date:"d.m.Y"}}</h3>
                                 <span class="badge bg-primary fs-6">{{workout.target_muscle}}</span>
+                                <span class="badge bg-succes fs-6 ms-2 text-dark">Tonaż żeliwa: {{ workout.total_tonnage }} kg</span>
+                                <span class="badge bg-info fs-6 ms-2 text-dark">Wykonane serie: {{ sets|length }}</span>
                             </div>
                             <a href="{%url 'dashboard' %}" class="btn btn-outline-secondary fw-bold">Wróć do bazy</a>
                         </div>
@@ -81,7 +83,12 @@
                                          <tr>
                                             <td class="ps-4 fw-semibold align-middle">{{ set.exercise }}</td>
                                             <td class="align-middle"><span class="badge bg-secondary">Seria {{ set.set_number }}</span></td>
-                                            <td class="text-danger fw-bold align-middle fs-5">{{ set.weight }} kg.</td>
+                                            <td class="text-danger fw-bold align-middle fs-5">
+                                                {{ set.weight }} kg
+                                                {% if set.weight >= 100 %}
+                                                <span class="badge bg-danger ms-2" style="font-size: 0.6em; vertical-align: middle;">Cienszkie!</span>
+                                                {% endif %}
+                                            </td>
                                             <td class="align-middle fs-5">{{ set.reps }}</td>
 
                                             <td class="align-middle">
