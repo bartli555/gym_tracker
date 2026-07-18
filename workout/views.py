@@ -1,13 +1,30 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Workout, TrainingSet
 from .forms import WorkoutForm, TrainingSetForm
+from django.db.models import Max
+import json
 
 def dashboard(request):
     # Wyciągamy z bazy wszystkie treningi, posortowane od najnowszego
     all_workouts = Workout.objects.all().order_by('-date')
     # Pakujemy je w paczkę (słownik), żeby przekazać do HTML-a
+
+    target_exercise = "Wyciskanie na klate"
+    # 2. NOWA LOGIKA DLA WYKRESU
+    qs = TrainingSet.objects.filter(exercise__icontains=target_exercise) \
+                            .values('workout__date') \
+                            .annotate(max_weight=Max('Weight')) \
+                            .order_by('workout__date')
+
+    # Przerabiamy wyniki na listy dla JavaScriptu
+    dates = [str(entry['workout__date']) for entry in qs]
+    weights = [float(entry['max_weight']) for entry in qs]
+
     context = {
-        'workouts': all_workouts
+        'workouts': all_workouts,
+        'target_exercise': target_exercise,
+        'dates_json': json.dumps(dates),
+        'weights_json': json.dumps(weights)
     }
     # Przekazujemy paczkę do szablonu, który zaraz stworzymy
     return render(request, 'workout/dashboard.html', context)
