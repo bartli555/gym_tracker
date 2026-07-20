@@ -13,12 +13,15 @@ def dashboard(request):
     # 2. NOWA LOGIKA DLA WYKRESU
     qs = TrainingSet.objects.filter(exercise__icontains=target_exercise) \
                             .values('workout__date') \
-                            .annotate(max_weight=Max('Weight')) \
+                            .annotate(max_weight=Max('weight')) \
                             .order_by('workout__date')
 
     # Przerabiamy wyniki na listy dla JavaScriptu
     dates = [str(entry['workout__date']) for entry in qs]
     weights = [float(entry['max_weight']) for entry in qs]
+
+    print("Daty:", dates)
+    print("Ciężary:", weights)
 
     context = {
         'workouts': all_workouts,

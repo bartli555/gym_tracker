@@ -12,7 +12,7 @@
                 <!-- Główny nagłówek -->
                     <div class="row mb-4">
                         <div class="col-12 text-center">
-                            <h1 class="display-4 fw-bold text-dark">Dziennik Sreningowy</h1>
+                            <h1 class="display-4 fw-bold text-dark">Dziennik Treningowy</h1>
                             <div class="mt-3">
                                 <a href="{% url 'add_workout' %}" class="btn btn-succes btn-lg shadow-sm">Dodaj nowy krenink</a>
                             </div>
@@ -26,12 +26,33 @@
                         <div class="card-header bg-dark text-white">
                             <h5 class="mb-0">Progres siłowy: {{ target_exercise }}</h5>
                         </div>
+                            <div class="card-body">
+                            <canvas id="progressChart" height="100"></canvas>
+                        </div>
                     </div>
 
                     <script>
                         const labels = {{ dates_json|safe }};
-                        const data = {{ weight_json|safe }};
-                        
+                        const data = {{ weights_json|safe }};
+                        const ctx = document.getElementById('progressChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Maksymalny ciężar (kg)',
+                                    data: data,
+                                    borderColor: 'rgba(220, 53, 69, 1)',
+                                    backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                                    borderWidth: 3,
+                                    tension: 0.3,
+                                    fill: true,
+                                    pointBackgroundColor: 'rgba(220, 53, 69, 1)',
+                                    pointRadius: 5
+                                }]
+                            },
+                            options: {responsive: true, scales: {y: {beginAtZero: false } } }
+                        });
 
                     </script>
 
