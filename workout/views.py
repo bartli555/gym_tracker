@@ -7,24 +7,34 @@ import json
 def dashboard(request):
     # Wyciągamy z bazy wszystkie treningi, posortowane od najnowszego
     all_workouts = Workout.objects.all().order_by('-date')
-    # Pakujemy je w paczkę (słownik), żeby przekazać do HTML-a
 
-    target_exercise = "Wyciskanie na klate"
-    # 2. NOWA LOGIKA DLA WYKRESU
-    qs = TrainingSet.objects.filter(exercise__icontains=target_exercise) \
-                            .values('workout__date') \
-                            .annotate(max_weight=Max('weight')) \
-                            .order_by('workout__date')
+    # Wyciągamy listę unikalnych nazw ćwiczeń z bazy
+    uniqe_exercises = TrainingSet.objects.values_list('exercise', flat=True).distinct()
 
-    # Przerabiamy wyniki na listy dla JavaScriptu
-    dates = [str(entry['workout__date']) for entry in qs]
-    weights = [float(entry['max_weight']) for entry in qs]
+    # Sprawdzamy, co wybrał użytkownik z menu (parametr w adresie URL)
+    target_exercise = request.GET.get('exercise')
 
-    print("Daty:", dates)
-    print("Ciężary:", weights)
+    # Jeśli ktoś wszedł na stronę i nic nie wybrał (pierwsze załadowanie), 
+    # to ładujemy wykres dla pierwszego ćwiczenia z listy (jeśli jakieś istnieje)
+    if not target_exercise and uniqe_exercises:
+         target_exercise = uniqe_exercises[0]
+
+    # Filtrujemy dane tylko dla wybranego ćwiczenia (lub domyślnego)
+    dates = []
+    weights = []
+
+    if target_exercise:
+         qs = TrainingSet.objects.filter(exercise__icontains=target_exercise) \
+                                .values('workout__date') \
+                                .annotate(max_weight = Max('weight')) \
+                                .order_by('workout__date')
+         dates = [str(entry['workout__date']) for entry in qs]
+         weights = [float(entry['max_weight']) for entry in qs]
+                                
 
     context = {
         'workouts': all_workouts,
+        'unique_exercises': uniqe_exercises,
         'target_exercise': target_exercise,
         'dates_json': json.dumps(dates),
         'weights_json': json.dumps(weights)
