@@ -59,6 +59,9 @@ def workout_detail(request, pk):
      # Wyciągamy konkretny trening z bazy na podstawie jego ID (pk - primary key)
      workout = get_object_or_404(Workout, pk=pk)
 
+     # Wyciągamy listę wszystkich unikalnych ćwiczeń z bazy
+     unique_exercises = TrainingSet.objects.values_list('exercise', flat=True).distinct()
+
      if request.method == 'POST':
           form = TrainingSetForm(request.POST)
           if form.is_valid():
@@ -76,6 +79,7 @@ def workout_detail(request, pk):
 
      context = {
           'workout': workout,
+          'unique_exercises': unique_exercises,
           'form': form,
           'sets': workout.sets.all().order_by('id') # Wyciągamy dodane już serie
      }           

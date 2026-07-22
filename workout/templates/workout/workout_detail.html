@@ -33,8 +33,15 @@
                                 {% csrf_token %}
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Ćwiczenie</label>
-                                    {{ form.exercise }}
+                                    <label for="exerciseInput" class="form-label fw-bold">Nazwa ćwiczenia:</label>
+                                    <input type="text" name="exercise" id="exerciseInput" class="form-control"
+                                            list="exerciseOptions" placeholder="Zacznij wpisywać lub wybierz z listy" autocomplete="off" required>
+                                    <!-- Niewidzialna lista podpowiedzi zasilana z bazy -->
+                                    <datalist id="exerciseOptions">
+                                        {% for ex in unique_exercises %}
+                                            <option value="{{ ex }}"></option>
+                                        {% endfor %}
+                                    </datalist>
                                 </div>
 
                                 <div class="mb-3">
