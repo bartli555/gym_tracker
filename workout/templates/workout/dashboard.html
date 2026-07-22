@@ -106,8 +106,18 @@
                                              <tr>
                                                 <td class="align-middle ps-4 fw-bold">{{ workout.date|date:"d.m.Y" }}</td>
                                                 <td class="align-middle">
-                                                    <span class="badge bg-primary fs-6">{{ workout.target_muscle }}</span>
-                                                    <a href="{% url 'workout_detail' workout.pk %}" class="btn btn-sm btn-outline-primary ms-2">Otwórz sesję</a>
+                                                    <span class="badge bg-primary fs-6 mb-2 d-block" style="width: fit.content">{{ workout.target_muscle }}</span>
+                                                    
+                                                    <div class="d-flex gap-2">
+                                                        <!-- Zwykły przycisk do otwierania -->
+                                                         <a href="{% url 'workout_detail' workout.pk %}" class="btn btn-sm btn-outline-primary">Otwórz sesję treningową</a>
+                                                         <!-- Mini-formularz z zabezpieczeniem CSRF i JS-owym oknem potwierdzenia -->
+                                                         <form action="{% url 'delete_workout' workout.pk %}" method="POST" onsubmit="return confirm('Panie, chcesz Pan usunąć ten trening?');">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Usuń</button>
+                                                         </form> 
+                                                    </div>
+
                                                 </td>
                                                 <td class="py-3">
                                                     <ul class="list-unstyled mb-0">

@@ -109,3 +109,12 @@ def edit_set(request, set_id):
             form = TrainingSetForm(instance=training_set)   
 
     return render(request, 'workout/edit_set.html', {'form': form, 'training_set': training_set})
+
+def delete_workout(request, pk):
+     # Ze względów bezpieczeństwa reagujemy tylko na żądania POST
+     if request.method == 'POST':
+          workout = get_object_or_404(Workout, pk=pk)
+          workout.delete()
+
+     # Po skasowaniu przekierowujemy z powrotem na główny kokpit
+     return redirect('dashboard')     
