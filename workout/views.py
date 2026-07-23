@@ -8,6 +8,19 @@ def dashboard(request):
     # Wyciągamy z bazy wszystkie treningi, posortowane od najnowszego
     all_workouts = Workout.objects.all().order_by('-date')
 
+    # Łapiemy parametry dat z adresu URL
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    muscle_query = request.GET.get('muscle')
+
+    #Nakładamy filtry na zapytanie do bazy, jeśli daty zostały podane
+    if date_from:
+         all_workouts = all_workouts.filter(date__gte=date_from) # gte = greater than or equal (od)
+    if date_to:
+         all_workouts = all_workouts.filter(date__lte=date_to) # lte = less than or equal (do)  
+    if muscle_query:
+         all_workouts = all_workouts.filter(target_muscle__icontains=muscle_query)        
+
     # Wyciągamy listę unikalnych nazw ćwiczeń z bazy
     uniqe_exercises = TrainingSet.objects.values_list('exercise', flat=True).distinct()
 

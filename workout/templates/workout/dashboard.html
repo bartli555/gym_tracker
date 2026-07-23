@@ -87,6 +87,33 @@
 
                     </script>
 
+                    <div class="card shadow-sm border-0 mb-4 bg-white bg-opacity-75">
+                        <div class="card-body">
+                            <form method="get" class="row g-3 align-items-end">
+                                <!-- Ważne: Przekazujemy też obecne ćwiczenie z wykresu, żeby go nie zresetować przy filtrowaniu dat! -->
+                                 <input type="hidden" name="exercise" value="{{ target_exercise }}">
+
+                                 <div class="col-md-auto">
+                                    <label class="form-label fw-bold text-dark mb-1">Data od:</label>
+                                    <!-- Wartość value utrzymuje wybraną datę w polu po przeładowaniu strony -->
+                                     <input type="date" name="date_from" class="form-control border-dark" value="{{ request.GET.date_from }}">
+                                 </div>
+                                 <div class="col-md-auto">
+                                    <label class="form-label fw-bold text-dark mb-1">Data do:</label>
+                                    <input type="date" name="date_to" class="form-control border-dark" value="{{ request.GET.date_to }}">
+                                 </div>
+                                 <div class="col-md-auto">
+                                    <label class"form-label fw-bold text-dark mb-1">Partia mięśniowa:</label>
+                                    <input type="text" name="muscle" class="form-control border-dark" placeholder="np. Klatka i plecy" value="{{ request.GET.muscle}}">
+                                 </div>
+                                 <div class="col-md-auto">
+                                    <button type="submit" class="btn btn-dark fw-bold px-4">Filtruj historię</button>
+                                    <a href="{% url 'dashboard' %}" class="btn btn-outline-danger fw-bold ms-2">Wyczyść filtry</a>
+                                 </div>
+                            </form>
+                        </div>
+                    </div>
+
                     <!-- Tabela z danymi -->
                     <div class="row">
                         <div class="col-12">
