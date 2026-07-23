@@ -116,3 +116,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Przekierowanie po udanym logowaniu (używamy nazwy widoku z Twojego pliku urls.py)
+LOGIN_REDIRECT_URL = 'dashboard'
+
+# Gdzie wyrzucić użytkownika po wylogowaniu (przerzucamy z powrotem do ekranu logowania)
+LOGOUT_REDIRECT_URL = 'login'
