@@ -24,3 +24,14 @@ class TrainingSet(models.Model):
 
     def __str__(self):
         return f"{self.weight} kg x {self.reps} powt."
+
+class DailyMetrics(models.Model):
+    date = models.DateField(unique=True, verbose_name="Data pomiaru")
+    weight = models.DecimalField(max_digits=5, decimal_places=2,verbose_name="Masa ciała (kg)")
+    calories = models.PositiveIntegerField(verbose_name="Spożyte kalorie (kcal)", null=True, blank=True)
+    protein = models.PositiveIntegerField(verbose_name="Białko (g)", null=True, blank=True)
+    carbs = models.PositiveIntegerField(verbose_name="Węglowodany (g)", null=True, blank=True)
+    fats = models.PositiveIntegerField(verbose_name="Tłuszcze (g)", null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.date} - {self.weight} kg"

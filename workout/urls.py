@@ -11,5 +11,6 @@ urlpatterns = [
     path('seria/<int:set_id>/usun/', views.delete_set, name='delete_set'),
     path('seria/<int:set_id>/edytuj/', views.edit_set, name='edit_set'),
     path('workout/<int:pk>/delete', views.delete_workout, name='delete_workout'),
+    path('metrics/add', views.add_daily_metrics, name='add_daily_metrics')
 ]
 

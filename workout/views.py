@@ -1,12 +1,17 @@
+from datetime import date
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Workout, TrainingSet
+from .models import Workout, TrainingSet, DailyMetrics
 from .forms import WorkoutForm, TrainingSetForm
 from django.db.models import Max
 import json
 
+@login_required
 def dashboard(request):
     # Wyciągamy z bazy wszystkie treningi, posortowane od najnowszego
     all_workouts = Workout.objects.all().order_by('-date')
+    # Wyciągamy ostatni zaraportowany dzień (first() bierze pierwszy wynik z posortowanej listy)
+    latest_metrics = DailyMetrics.objects.order_by('-date').first()
 
     # Łapiemy parametry dat z adresu URL
     date_from = request.GET.get('date_from')
@@ -50,11 +55,13 @@ def dashboard(request):
         'unique_exercises': uniqe_exercises,
         'target_exercise': target_exercise,
         'dates_json': json.dumps(dates),
-        'weights_json': json.dumps(weights)
+        'weights_json': json.dumps(weights),
+        'latest_metrics': latest_metrics
     }
     # Przekazujemy paczkę do szablonu, który zaraz stworzymy
     return render(request, 'workout/dashboard.html', context)
 
+@login_required
 def add_workout(request):
     # Jeśli ktoś kliknął przycisk "Zapisz" (wysłał dane formularzem)
     if request.method == 'POST':
@@ -68,6 +75,7 @@ def add_workout(request):
 
     return render(request, 'workout/add_workout.html', {'form': form})
 
+@login_required
 def workout_detail(request, pk):
      # Wyciągamy konkretny trening z bazy na podstawie jego ID (pk - primary key)
      workout = get_object_or_404(Workout, pk=pk)
@@ -98,6 +106,7 @@ def workout_detail(request, pk):
      }           
      return render(request, 'workout/workout_detail.html', context)
 
+@login_required
 def delete_set(request, set_id):
      # Znajdujemy konkretną serię w bazie
      training_set = get_object_or_404(TrainingSet, id=set_id)
@@ -107,6 +116,7 @@ def delete_set(request, set_id):
      training_set.delete()
      return redirect('workout_detail', pk=workout_id)
 
+@login_required
 def edit_set(request, set_id):
     training_set = get_object_or_404(TrainingSet, id=set_id)
     workout_id = training_set.workout.id
@@ -123,6 +133,7 @@ def edit_set(request, set_id):
 
     return render(request, 'workout/edit_set.html', {'form': form, 'training_set': training_set})
 
+@login_required
 def delete_workout(request, pk):
      # Ze względów bezpieczeństwa reagujemy tylko na żądania POST
      if request.method == 'POST':
@@ -131,3 +142,27 @@ def delete_workout(request, pk):
 
      # Po skasowaniu przekierowujemy z powrotem na główny kokpit
      return redirect('dashboard')     
+
+@login_required
+def add_daily_metrics(request):
+     if request.method == 'POST':
+          # Pobieramy dane z formularza. Jeśli pole jest puste, ustawiamy None
+          weight = request.POST.get('weight')
+          calories = request.POST.get('calories') or None
+          protein = request.POST.get('protein') or None
+          carbs = request.POST.get('carbs') or None
+          fats = request.POST.get('fats') or None
+
+          # update_or_create szuka wpisu z dzisiejszą datą. 
+          # Jak nie ma - tworzy nowy. Jak jest - aktualizuje podane pola (defaults)
+          DailyMetrics.objects.update_or_create(
+               date = date.today(),
+               defaults={
+                    'weight': weight,
+                    'calories': calories,
+                    'protein': protein,
+                    'carbs': carbs,
+                    'fats': fats
+               }
+          )
+     return redirect('dashboard')

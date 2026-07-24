@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Workout, TrainingSet
+from .models import Workout, TrainingSet, DailyMetrics
 
 # Tworzymy moduł do wpisywania serii "w linii"
 class TrainingSetInline(admin.TabularInline):
@@ -14,3 +14,4 @@ class WorkoutAdmin(admin.ModelAdmin):
 
 # Rejestrujemy z nowymi ustawieniami
 admin.site.register(Workout, WorkoutAdmin)
+admin.site.register(DailyMetrics)
