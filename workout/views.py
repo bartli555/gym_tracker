@@ -3,8 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Workout, TrainingSet, DailyMetrics
 from .forms import WorkoutForm, TrainingSetForm
-from django.db.models import Max
+from django.db.models import Max, Sum, F
 import json
+from django.http import JsonResponse
 
 @login_required
 def dashboard(request):
@@ -166,3 +167,18 @@ def add_daily_metrics(request):
                }
           )
      return redirect('dashboard')
+
+def get_exercise_chart_data(request, exercise_id):
+     # Wyciągamy dane dla konkretnego ćwiczenia
+     queryset = TrainingSet.objects.filter(exercise_id=exercise_id)
+
+     # Magia ORM-a: grupowanie i agregacja
+     chart_data = queryset.values('date').annotate(
+          max_weight = Max('weight'),
+          tonnage = Sum(F('weight') * F('reps'))
+     ).order_by('date')
+
+     # Rzutowanie QuerySetu na zwykłą listę słowników (dla JSON-a)
+     data_list = list(chart_data)
+
+     return JsonResponse({'data': data_list})
