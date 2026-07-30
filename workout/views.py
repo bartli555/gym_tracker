@@ -5,7 +5,6 @@ from .models import Workout, TrainingSet, DailyMetrics
 from .forms import WorkoutForm, TrainingSetForm
 from django.db.models import Max, Sum, F
 import json
-from django.http import JsonResponse
 
 @login_required
 def dashboard(request):
@@ -41,15 +40,20 @@ def dashboard(request):
     # Filtrujemy dane tylko dla wybranego ćwiczenia (lub domyślnego)
     dates = []
     weights = []
+    tonnage = []
 
     if target_exercise:
          qs = TrainingSet.objects.filter(exercise__icontains=target_exercise) \
                                 .values('workout__date') \
-                                .annotate(max_weight = Max('weight')) \
+                                .annotate(
+                                     max_weight = Max('weight'),
+                                     total_tonnage = Sum(F('weight') *F('reps'))
+                                ) \
                                 .order_by('workout__date')
+         
          dates = [str(entry['workout__date']) for entry in qs]
-         weights = [float(entry['max_weight']) for entry in qs]
-                                
+         weights = [float(entry['max_weight'] or 0) for entry in qs]
+         tonnage = [float(entry['total_tonnage'] or 0) for entry in qs]                       
 
     context = {
         'workouts': all_workouts,
@@ -57,6 +61,7 @@ def dashboard(request):
         'target_exercise': target_exercise,
         'dates_json': json.dumps(dates),
         'weights_json': json.dumps(weights),
+        'tonnage_json': json.dumps(tonnage),
         'latest_metrics': latest_metrics
     }
     # Przekazujemy paczkę do szablonu, który zaraz stworzymy
@@ -167,18 +172,3 @@ def add_daily_metrics(request):
                }
           )
      return redirect('dashboard')
-
-def get_exercise_chart_data(request, exercise_id):
-     # Wyciągamy dane dla konkretnego ćwiczenia
-     queryset = TrainingSet.objects.filter(exercise_id=exercise_id)
-
-     # Magia ORM-a: grupowanie i agregacja
-     chart_data = queryset.values('date').annotate(
-          max_weight = Max('weight'),
-          tonnage = Sum(F('weight') * F('reps'))
-     ).order_by('date')
-
-     # Rzutowanie QuerySetu na zwykłą listę słowników (dla JSON-a)
-     data_list = list(chart_data)
-
-     return JsonResponse({'data': data_list})
