@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale:1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Gym Tracker - Analiza progresu</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -87,37 +87,77 @@
                     </form>    
 
                     <div class="card shadow border-0 mt-4 mb-5">
-                        <div class="card-header bg-dark text-white">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Progres siłowy: {{ target_exercise }}</h5>
                         </div>
                             <div class="card-body">
+                                <!-- Przyciski do przełączania wykresu -->
+                                <div class="mb-3 text-center chart-controls">
+                                    <button type="button" id="btn-1rm" class="btn btn-danger btn-sm px-4 fw-bold shadow-sm">Top Set (1RM)</button>
+                                    <button type="button" id="btn-tonnage" class="btn btn-outline-primary btn-sm px-4 fw-bold shadow-sm ms-2">Całkowity Tonaż</button>
+                                </div>
                             <canvas id="progressChart" height="100"></canvas>
                         </div>
                     </div>
 
                     <script>
-                        const labels = {{ dates_json|safe }};
-                        const data = {{ weights_json|safe }};
-                        const ctx = document.getElementById('progressChart').getContext('2d');
-                        new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    label: 'Maksymalny ciężar (kg)',
-                                    data: data,
-                                    borderColor: 'rgba(220, 53, 69, 1)',
-                                    backgroundColor: 'rgba(220, 53, 69, 0.2)',
-                                    borderWidth: 3,
-                                    tension: 0.3,
-                                    fill: true,
-                                    pointBackgroundColor: 'rgba(220, 53, 69, 1)',
-                                    pointRadius: 5
-                                }]
-                            },
-                            options: {responsive: true, scales: {y: {beginAtZero: false } } }
-                        });
+                        document.addEventListener("DOMContentLoaded", function() {    
+                            const labels = {{ dates_json|safe }};
+                            const weightsData = {{ weights_json|safe }};
+                            const tonnageData = {{ tonnage_json|safe }};
 
+                            const ctx = document.getElementById('progressChart').getContext('2d');
+
+                            let progressChart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: 'Maksymalny ciężar (kg)',
+                                        data: weightsData,
+                                        borderColor: 'rgba(220, 53, 69, 1)',
+                                        backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                                        borderWidth: 3,
+                                        tension: 0.3,
+                                        fill: true,
+                                        pointBackgroundColor: 'rgba(220, 53, 69, 1)',
+                                        pointRadius: 5
+                                    }]
+                                },
+                                options: {responsive: true, scales: {y: {beginAtZero: false } } }
+                            });
+
+                            const btn1RM = document.getElementById('btn-1rm');
+                            const btnTonnage = document.getElementById('btn-tonnage');
+
+                            btn1RM.addEventListener('click', function() {
+                                progressChart.data.datasets[0].data = weightsData;
+                                progressChart.data.datasets[0].label = "Maksymalny ciężar (kg)";
+
+                                progressChart.data.datasets[0].borderColor = 'rgba(220, 53, 69 ,1)';
+                                progressChart.data.datasets[0].backgroundColor = 'rgba(220, 53, 69, 0.2)';
+                                progressChart.data.datasets[0].pointBackgroundColor = 'rgba(220, 53, 69, 1)';
+
+                                btn1RM.classList.replace('btn-outline-danger', 'btn-danger');
+                                btnTonnage.classList.replace('btn-primary', 'btn-outline-primary');
+
+                                progressChart.update();
+                            });
+
+                            btnTonnage.addEventListener('click', function() {
+                                progressChart.data.datasets[0].data = tonnageData;
+                                progressChart.data.datasets[0].label = "Całkowity Tonaż (kg)";
+
+                                progressChart.data.datasets[0].borderColor = 'rgba(13, 110, 253, 1)';
+                                progressChart.data.datasets[0].backgroundColor = 'rgba(13, 110, 253, 0.2)';
+                                progressChart.data.datasets[0].pointBackgroundColor = 'rgba(13, 110, 253, 1)';
+
+                                btnTonnage.classList.replace('btn-outline-primary', 'btn-primary');
+                                btn1RM.classList.replace('btn-danger', 'btn-outline-danger');
+
+                                progressChart.update();
+                            });
+                        });
                     </script>
 
                     <div class="card shadow-sm border-0 mb-4 bg-white bg-opacity-75">
