@@ -1,5 +1,7 @@
-from datetime import date
+import csv
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Workout, TrainingSet, DailyMetrics
 from .forms import WorkoutForm, TrainingSetForm
@@ -172,3 +174,69 @@ def add_daily_metrics(request):
                }
           )
      return redirect('dashboard')
+
+@login_required
+def upload_hevy_csv(request):
+     if request.method == 'POST':
+          csv_file = request.FILES.get('csv_file')
+
+          # Proste zabezpieczenie, żeby ktoś nie wrzucił tam np. zdjęcia
+          if not csv_file or not csv_file.name.endswtih('.csv'):
+               messages.error(request, "EEE, to nie jest plik CSV.")
+               return redirect('dashboard')
+          
+          # Odczytujemy plik w pamięci, linijka po linijce
+          file_data = csv_file.read().decode('utf-8').splitlines()
+          reader = csv.DictReader(file_data)
+
+          workouts_created = 0
+          sets_created = 0
+
+          for row in reader:
+               # Hevy dorzuca backslashe do nagłówków (np. start\_time)
+               # Czyścimy klucze słownika ze znaków '\', żeby wygodnie wyciągać dane
+               clean_row = {k.replace('\\', ''): v for k, v in row.items()}
+
+               # Pobieramy datę z kolumny start_time (format z Hevy: "1 Aug 2026, 12:46")
+               try:
+                    date_obj = datetime.strptime(clean_row['start_time'], '%d %b %Y, %H:%M')
+                    workout_date = date_obj.date()
+               except (ValueError, KeyError):
+                    # Jeśli wiersz jest uszkodzony lub pusty, lecimy do następnego
+                    continue     
+
+               exercise_name = clean_row['exercise_title']
+
+               # Zabezpieczenie przed pustymi wartościami, np. przy ćwiczeniach z masą ciała
+               weight = float(clean_row['weight_kg']) if clean_row.get('weight_kg') else 0.0
+               reps = int(clean_row['reps']) if clean_row.get('reps') else 0
+               set_number = int(clean_row['set_index']) if clean_row.get('set_index') else 0 
+
+               # 1. Krok pierwszy: Szukamy (lub tworzymy) Trening dla danego dnia
+               workout, w_created = Workout.objects.get_or_create(
+                    date = workout_date,
+                    defaults={
+                         'target_muscle': 'Import z Hevy' # Domyślna partia dla całego dnia
+                    }
+               )
+               if w_created:
+                    workouts_created += 1
+
+               # 2. Krok drugi: Szukamy (lub tworzymy) konkretną serię (Set)
+               # Dzięki temu nie dodamy dwa razy tej samej serii z tego samego pliku
+               t_set, s_created = TrainingSet.objects.get_or_create(
+                    workout = workout,
+                    exercise = exercise_name,
+                    set_number = set_number,
+                    defaults={
+                         'weight': weight,
+                         'reps': reps
+                    }
+               )
+               if s_created:
+                    sets_created += 1
+
+          messages.succes(request, f"Import zakończony! Utworzono {workouts_created} nowych treningów i {sets_created} serii")
+          return redirect('dashboard')
+
+     return render(request, 'workout/upload_csv.html')
