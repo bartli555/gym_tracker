@@ -58,8 +58,11 @@
                     <div class="row mb-4">
                         <div class="col-12 text-center">
                             <h1 class="display-4 fw-bold text-dark">Dziennik Treningowy</h1>
-                            <div class="mt-3">
-                                <a href="{% url 'add_workout' %}" class="btn btn-succes btn-lg shadow-sm">Dodaj nowy trenink</a>
+                            <div class="mt-3 d-flex jusify-content-center gap-3">
+                                <a href="{% url 'add_workout' %}" class="btn btn-dark btn-lg shadow-sm">Dodaj nowy trenink</a>
+                                <a href="{% url 'upload_hevy_csv' %}" class="btn btn-dark btn-lg shadow-sm">
+                                    <i class="bi bi-cloud-upload me-2"></i>Import z Hevy
+                                </a>
                             </div>
                             <h2 class="text-muted">System analizy progresywnego przeładownia</h2>
                         </div>

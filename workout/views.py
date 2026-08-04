@@ -164,7 +164,7 @@ def add_daily_metrics(request):
           # update_or_create szuka wpisu z dzisiejszą datą. 
           # Jak nie ma - tworzy nowy. Jak jest - aktualizuje podane pola (defaults)
           DailyMetrics.objects.update_or_create(
-               date = date.today(),
+               date = datetime.today(),
                defaults={
                     'weight': weight,
                     'calories': calories,
@@ -181,7 +181,7 @@ def upload_hevy_csv(request):
           csv_file = request.FILES.get('csv_file')
 
           # Proste zabezpieczenie, żeby ktoś nie wrzucił tam np. zdjęcia
-          if not csv_file or not csv_file.name.endswtih('.csv'):
+          if not csv_file or not csv_file.name.endswith('.csv'):
                messages.error(request, "EEE, to nie jest plik CSV.")
                return redirect('dashboard')
           
@@ -236,7 +236,7 @@ def upload_hevy_csv(request):
                if s_created:
                     sets_created += 1
 
-          messages.succes(request, f"Import zakończony! Utworzono {workouts_created} nowych treningów i {sets_created} serii")
+          messages.success(request, f"Import zakończony! Utworzono {workouts_created} nowych treningów i {sets_created} serii")
           return redirect('dashboard')
 
      return render(request, 'workout/upload_csv.html')
