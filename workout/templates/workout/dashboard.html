@@ -198,14 +198,14 @@
                                     <table class="table table-hover mb-0">
                                         <thead class="table-dark">
                                             <tr>
-                                                <th class="ps-4">Data kreningu</th>
+                                                <th class="ps-4">Data treningu</th>
                                                 <th>Partia mięłsniowa</th>
                                                 <th>Szczegóły wykonania (Zestawienie serii)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <!-- pętla Django - przechodzi przez każdy trening z bazy -->
-                                             {% for workout in workouts %}
+                                             {% for workout in page_obj %}
                                              <tr>
                                                 <td class="align-middle ps-4 fw-bold">{{ workout.date|date:"d.m.Y" }}</td>
                                                 <td class="align-middle">
@@ -250,6 +250,48 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Paginacja -->
+                    <div class="d-flex juistyfy-content-center mt-4 mb-5">
+                        <nav aria-label="Nawiguj">
+                            <ul class="pagination shadow-sm">
+
+                                <!-- Przycisk "Poprzednia" -->
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link text-dark fw-bold" href="?page=1">&laquo; Pierwsza</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link text dark" href="?page={{ page_obj.previous_page_number }}">Poprzednia</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">&laquo; Pierwsza</span></li>
+                                    <li class="page-item disabled"><span class="page-link">Poprzednia</span></li>
+                                {% endif %}
+
+                                <!-- Aktualna strona -->
+                                 <li class="page-item active">
+                                    <span class="page-link bg-danger border-danger">
+                                        Strona {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                 </li>
+
+                                 <!-- Przycisk "Następna" -->
+                                 {% if page_obj.has_next %}
+                                    <li class="page-list">
+                                        <a class="page-link text-dark" href="?page={{ page_obj.next_page_number }}">Następna</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link text-dark fw-bold" href="?page={{ page_obj.paginator_num_pages }}">Ostatnia &raquo;</a>
+                                    </li>
+                                 {% else %}
+                                    <li class="page-item disabled"><span class="page-link">Następna</span></li>
+                                    <li class="page-item disabled"><span class="page-link">Ostatnia &raquo;</span></li>
+                                 {% endif %}       
+                            </ul>
+                        </nav>
+
                     </div>
             </div>
                 <div class="modal fade" id="metricsModal" tabindex="-1" aria-hidden="true">

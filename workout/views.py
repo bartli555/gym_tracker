@@ -7,6 +7,7 @@ from .models import Workout, TrainingSet, DailyMetrics
 from .forms import WorkoutForm, TrainingSetForm
 from django.db.models import Max, Sum, F
 import json
+from django.core.paginator import Paginator
 
 @login_required
 def dashboard(request):
@@ -14,6 +15,12 @@ def dashboard(request):
     all_workouts = Workout.objects.all().order_by('-date')
     # Wyciągamy ostatni zaraportowany dzień (first() bierze pierwszy wynik z posortowanej listy)
     latest_metrics = DailyMetrics.objects.order_by('-date').first()
+
+     # podział na strony
+
+    paginator = Paginator(all_workouts, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     # Łapiemy parametry dat z adresu URL
     date_from = request.GET.get('date_from')
@@ -58,6 +65,7 @@ def dashboard(request):
          tonnage = [float(entry['total_tonnage'] or 0) for entry in qs]                       
 
     context = {
+        'page_obj': page_obj,       
         'workouts': all_workouts,
         'unique_exercises': uniqe_exercises,
         'target_exercise': target_exercise,
