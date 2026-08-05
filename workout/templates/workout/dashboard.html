@@ -271,9 +271,10 @@
                                 {% endif %}
 
                                 <!-- Aktualna strona -->
-                                 <li class="page-item active">
-                                    <span class="page-link bg-danger border-danger">
+                                 <li class="page-item active" style="cursor: pointer;" onclick="jumpToPage({{ page_obj.paginator.num_pages }})" title="Kliknij, aby przejść do innej strony">
+                                    <span class="page-link bg-danger border-danger text-white">
                                         Strona {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}
+                                        <span style="font-size: 0.75rem; margin-left: 4px;">🔍</span>
                                     </span>
                                  </li>
 
@@ -342,5 +343,31 @@
                     </div>
                 </div>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                function jumpToPage(maxPages) {
+                    // Wyświetlamy okienko z prośbą o podanie numeru
+                    let targetPage = prompt('Do której strony chcesz przejść? (1 - ${maxPages})');
+
+                    // Jeśli użytkownik wpisał wartość i nie wcisnął "Anuluj"
+                    if (targetPage !== null && targetPage.trim() !== ''){
+                        let pageNum = parseInt(targetPage)
+
+                        // Sprawdzamy czy wpisano poprawną liczbę z dostępnego zakresu
+                        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= maxPages) {
+
+                            // Pobieramy obecny adres URL i zmieniamy tylko parametr 'page'
+                            // Dzięki temu nie zresetujesz sobie wykresu z ćwiczeniem!
+                            let url = new URL(window.location.href);
+                            url.searchParams.set('page', pageNum);
+
+                            // Przeładowujemy stronę na nowy adres
+                            window.location.href = url.toString();
+                        }
+                        else {
+                            alert('Wpisana liczba musi być z zakresu od 1 do " + maxPages + "!');
+                        }
+                    }
+                } 
+            </script>
         </body>
 </html>
