@@ -248,3 +248,50 @@ def upload_hevy_csv(request):
           return redirect('dashboard')
 
      return render(request, 'workout/upload_csv.html')
+
+@login_required
+def upload_hevy_measurements(request):
+     if request.method == 'POST':
+          csv_file = request.FILES.get('csv_file')
+
+          if not csv_file or not csv_file.name.lower().endswith('.csv'):
+               messages.error(request, 'To nie jest plik csv')
+               return redirect ('dashboard')
+
+          file_data = csv_file.read().decode('utf-8-sig').splitlines()
+          reader = csv.DictReader(file_data)
+
+          metrics_updated = 0
+
+          for row in reader:
+          # Standaryzacja kluczy na małe litery, żeby uniknąć niespodzianek z Hevy
+               clean_row = {k.strip().lower().replace('\\', ''): v for k, v in row.items() if k}
+
+          # Łapiemy datę i wagę z najczęstszych nazw kolumn Hevy
+               date_str = clean_row.get('date','')
+               weight_str = clean_row.get('weight') or clean_row.get('weight_kg') or clean_row.get('weight (kg)')
+
+               if not date_str or not weight_str:
+                    continue
+
+               try:
+               # Parsowanie formatu daty
+                    if ',' in date_str:
+                         date_obj = datetime.strptime(date_str, '%d %b %Y, %H:%M').date()
+                    else:
+                         date_obj = datetime.strptime(date_str[:10], '%Y-%m-%d').date()
+
+                    weight_val = float(weight_str)
+               except (ValueError,TypeError):
+                    continue
+
+          # Aktualizujemy istniejący raport kaloryczny lub tworzymy nowy dzień
+               metric, created = DailyMetrics.objects.get_or_create(
+                    date = date_obj,
+                    defaults={'weight': weight_val}
+               )
+               metrics_updated += 1
+
+          messages.success(request,f'Pomiary wgrane! Zaktualizowano parametry dla {'metrics_updated'} dni')
+          return redirect('dashboard')
+     return render(request, 'workout/upload_measurements.html')

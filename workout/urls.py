@@ -12,6 +12,7 @@ urlpatterns = [
     path('seria/<int:set_id>/edytuj/', views.edit_set, name='edit_set'),
     path('workout/<int:pk>/delete', views.delete_workout, name='delete_workout'),
     path('metrics/add', views.add_daily_metrics, name='add_daily_metrics'),
-    path('import-hevy/', views.upload_hevy_csv, name="upload_hevy_csv")
+    path('import-hevy/', views.upload_hevy_csv, name="upload_hevy_csv"),
+    path('import-wagi/', views.upload_hevy_measurements, name='upload_hevy_measurements'),
 ]
 
