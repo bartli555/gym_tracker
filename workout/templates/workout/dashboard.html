@@ -5,6 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Gym Tracker - Analiza progresu</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Import biblioteki Chart.js przeniesiony do sekcji head -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <style>
             body {
@@ -18,359 +20,346 @@
             }
         </style>
     </head>
-        <body>
-            <div class="container mt-5">
-                
-                <!-- Główny nagłówek -->
-                    <div class="d-flex justify-content-end mb-3">
-                        <form action="{% url 'logout' %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-dark fw-bold shadow-sm">
-                            Wyloguj się
-                            </button>
-                        </form>
-                    </div>
-                    {% if latest_metrics %}
-                    <div class="card shadow-sm border-0 mb-4 bg-dark text-white">
-                        <div class="card-body d-flex justify-content-bettwen align-items-center">
-                            <div>
-                                <h6 class="mb-0 fw-bold center">Aktualny stan maszyny</h6>
-                                <h6 class="text-uppercase mb-1 small fw-bold text-white">Ostatni pomiar: ({{ latest_metrics.date|date:"d.m.Y." }}):</h6>
-                                <button type="button" class="btn btn-sm btn-outline-light py-0 px-2" data-bs-toggle="modal" data-bs-target="#metricsModal">
-                                    Zaktualizuj
-                                </button>
-                                <h3 class="mb-0 fw-bold">{{ latest_metrics.weight }} kg.</h3>
+    <body>
+        <div class="container mt-5">
+            
+            <!-- SYSTEM POWIADOMIEŃ DJANGO -->
+            {% if messages %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-dark" role="alert">
+                                <span class="fw-bold">Komunikat:</span> {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- 1. PASEK GÓRNY: Tytuł, Akcje i Wylogowanie -->
+            <div class="row align-items-center mb-5">
+                <div class="col-md-5">
+                    <h1 class="display-5 fw-bold text-dark mb-0">Dziennik Treningowy</h1>
+                    <h2 class="text-muted fs-5">System analizy progresywnego przeładowania</h2>
+                </div>
+                <div class="col-md-7 d-flex justify-content-md-end justify-content-start flex-wrap gap-2 mt-3 mt-md-0">
+                    <a href="{% url 'add_workout' %}" class="btn btn-success shadow-sm fw-bold">Dodaj trening</a>
+                    <a href="{% url 'upload_hevy_csv' %}" class="btn btn-dark shadow-sm"><i class="bi bi-cloud-upload me-1"></i>Import Treningów</a>
+                    <a href="{% url 'upload_hevy_measurements' %}" class="btn btn-warning shadow-sm fw-bold"><i class="bi bi-speedometer2 me-1"></i>Import Wagi</a>
+                    
+                    <form action="{% url 'logout' %}" method="POST" class="ms-md-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-dark fw-bold shadow-sm">Wyloguj</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 2. SEKCJA ANALITYCZNA: Dwie kolumny -->
+            <div class="row mb-4">
+                
+                <!-- Lewa kolumna: Wykres (2/3 szerokości) -->
+                <div class="col-lg-8 mb-4 mb-lg-0">
+                    <div class="card shadow border-0 h-100">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Progres siłowy: {{ target_exercise }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Przyciski do przełączania wykresu -->
+                            <div class="mb-3 text-center chart-controls">
+                                <button type="button" id="btn-1rm" class="btn btn-danger btn-sm px-4 fw-bold shadow-sm">Top Set (1RM)</button>
+                                <button type="button" id="btn-tonnage" class="btn btn-outline-primary btn-sm px-4 fw-bold shadow-sm ms-2">Całkowity Tonaż</button>
+                            </div>
+                            <canvas id="progressChart" height="110"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prawa kolumna: Stan Maszyny i Wybór Ćwiczenia (1/3 szerokości) -->
+                <div class="col-lg-4 d-flex flex-column gap-3">
+                    
+                    <!-- Karta: Stan Maszyny -->
+                    {% if latest_metrics %}
+                    <div class="card shadow-sm border-0 bg-dark text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 fw-bold">Aktualny stan maszyny</h6>
+                                <button type="button" class="btn btn-sm btn-outline-light py-0 px-2" data-bs-toggle="modal" data-bs-target="#metricsModal">Zaktualizuj</button>
+                            </div>
+                            
+                            <h6 class="text-uppercase mb-1 small fw-bold text-white opacity-75">Ostatni pomiar ({{ latest_metrics.date|date:"d.m.Y" }}):</h6>
+                            <h2 class="mb-3 fw-bold text-warning">{{ latest_metrics.weight }} kg</h2>
+                            
                             {% if latest_metrics.calories %}
-                            <div class="text-end">
-                                <h6 class="text-uppercase mb-1 small fw-bold text-white">Przyjęte kalorie:</h6>
-                                <h4 class="mb-0 text-warning fw-bold">{{ latest_metrics.calories }} kcal.</h4>
-                                <div class="small mt-1 text-light opacity-75">
-                                    B: {{ latest_metrics.protein|default:"-" }}g |
-                                    W: {{ latest_metrics.carbs|default:"-" }}g |
-                                    T: {{ latest_metrics.fats|default:"-" }}g
-                                </div>
+                            <hr class="border-secondary">
+                            <h6 class="text-uppercase mb-1 small fw-bold text-white opacity-75">Przyjęte kalorie:</h6>
+                            <h4 class="mb-1 text-warning fw-bold">{{ latest_metrics.calories }} kcal</h4>
+                            <div class="small text-light opacity-75">
+                                B: {{ latest_metrics.protein|default:"-" }}g | W: {{ latest_metrics.carbs|default:"-" }}g | T: {{ latest_metrics.fats|default:"-" }}g
                             </div>
                             {% endif %}
                         </div>
                     </div>
                     {% endif %}
-                    <div class="row mb-4">
-                        <div class="col-12 text-center">
-                            <h1 class="display-4 fw-bold text-dark">Dziennik Treningowy</h1>
-                            <div class="mt-3 d-flex jusify-content-center gap-3">
-                                <a href="{% url 'add_workout' %}" class="btn btn-dark btn-lg shadow-sm">Dodaj nowy trenink</a>
-                                <a href="{% url 'upload_hevy_csv' %}" class="btn btn-dark btn-lg shadow-sm">
-                                    <i class="bi bi-cloud-upload me-2"></i>Importuj treningi z Hevy
-                                </a>
-                                <a href="{% url 'upload_hevy_measurements' %}" class="btn btn-warning btn-lg shadow-sm fw-bold">
-                                    <i class="bi bi speedometer2 me-2"></i>Importuj Wagę z Hevy
-                                </a>
-                            </div>
-                            <h2 class="text-muted">System analizy progresywnego przeładownia</h2>
-                        </div>
-                    </div>
 
-                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-                    <form method="GET" class="mb-4">
-                        <div class="row align-itmes-center justify-content-center">
-                            <div class="col-auto">
-                                <label for="exerviseSelect" class="form-label fw-bold text-muted mb-0">Wybierz ćwiczenie do analizy:</label>
-                            </div>
-                            <div class="col-auto">
-                                <!-- Gdy zmienisz wartość, formularz sam się wyśle (odświeży stronę z nowymi danymi) -->
-                                 <select name="exercise" id="exercise_select" class="form-select border-dark fw-bold" onchange="this.form.submit()">
-                                    {% for exercise in unique_exercises %}
-                                    <!-- Sprawdzamy, czy to ćwiczenie jest aktualnie wyświetlane, żeby zaznaczyć je w menu -->
-                                     <option value="{{ exercise }}" {% if exercise == target_exercise %}selected{% endif %}>
-                                        {{ exercise }}
-                                     </option>
-                                     {% endfor %}
-                                 </select>
-                            </div>
-                        </div>
-                    </form>    
-
-                    <div class="card shadow border-0 mt-4 mb-5">
-                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Progres siłowy: {{ target_exercise }}</h5>
-                        </div>
-                            <div class="card-body">
-                                <!-- Przyciski do przełączania wykresu -->
-                                <div class="mb-3 text-center chart-controls">
-                                    <button type="button" id="btn-1rm" class="btn btn-danger btn-sm px-4 fw-bold shadow-sm">Top Set (1RM)</button>
-                                    <button type="button" id="btn-tonnage" class="btn btn-outline-primary btn-sm px-4 fw-bold shadow-sm ms-2">Całkowity Tonaż</button>
-                                </div>
-                            <canvas id="progressChart" height="100"></canvas>
-                        </div>
-                    </div>
-
-                    <script>
-                        document.addEventListener("DOMContentLoaded", function() {    
-                            const labels = {{ dates_json|safe }};
-                            const weightsData = {{ weights_json|safe }};
-                            const tonnageData = {{ tonnage_json|safe }};
-
-                            const ctx = document.getElementById('progressChart').getContext('2d');
-
-                            let progressChart = new Chart(ctx, {
-                                type: 'line',
-                                data: {
-                                    labels: labels,
-                                    datasets: [{
-                                        label: 'Maksymalny ciężar (kg)',
-                                        data: weightsData,
-                                        borderColor: 'rgba(220, 53, 69, 1)',
-                                        backgroundColor: 'rgba(220, 53, 69, 0.2)',
-                                        borderWidth: 3,
-                                        tension: 0.3,
-                                        fill: true,
-                                        pointBackgroundColor: 'rgba(220, 53, 69, 1)',
-                                        pointRadius: 5
-                                    }]
-                                },
-                                options: {responsive: true, scales: {y: {beginAtZero: false } } }
-                            });
-
-                            const btn1RM = document.getElementById('btn-1rm');
-                            const btnTonnage = document.getElementById('btn-tonnage');
-
-                            btn1RM.addEventListener('click', function() {
-                                progressChart.data.datasets[0].data = weightsData;
-                                progressChart.data.datasets[0].label = "Maksymalny ciężar (kg)";
-
-                                progressChart.data.datasets[0].borderColor = 'rgba(220, 53, 69 ,1)';
-                                progressChart.data.datasets[0].backgroundColor = 'rgba(220, 53, 69, 0.2)';
-                                progressChart.data.datasets[0].pointBackgroundColor = 'rgba(220, 53, 69, 1)';
-
-                                btn1RM.classList.replace('btn-outline-danger', 'btn-danger');
-                                btnTonnage.classList.replace('btn-primary', 'btn-outline-primary');
-
-                                progressChart.update();
-                            });
-
-                            btnTonnage.addEventListener('click', function() {
-                                progressChart.data.datasets[0].data = tonnageData;
-                                progressChart.data.datasets[0].label = "Całkowity Tonaż (kg)";
-
-                                progressChart.data.datasets[0].borderColor = 'rgba(13, 110, 253, 1)';
-                                progressChart.data.datasets[0].backgroundColor = 'rgba(13, 110, 253, 0.2)';
-                                progressChart.data.datasets[0].pointBackgroundColor = 'rgba(13, 110, 253, 1)';
-
-                                btnTonnage.classList.replace('btn-outline-primary', 'btn-primary');
-                                btn1RM.classList.replace('btn-danger', 'btn-outline-danger');
-
-                                progressChart.update();
-                            });
-                        });
-                    </script>
-
-                    <div class="card shadow-sm border-0 mb-4 bg-white bg-opacity-75">
+                    <!-- Karta: Panel Sterowania Wykresem -->
+                    <div class="card shadow-sm border-0 bg-white bg-opacity-75">
                         <div class="card-body">
-                            <form method="get" class="row g-3 align-items-end">
-                                <!-- Ważne: Przekazujemy też obecne ćwiczenie z wykresu, żeby go nie zresetować przy filtrowaniu dat! -->
-                                 <input type="hidden" name="exercise" value="{{ target_exercise }}">
-
-                                 <div class="col-md-auto">
-                                    <label class="form-label fw-bold text-dark mb-1">Data od:</label>
-                                    <!-- Wartość value utrzymuje wybraną datę w polu po przeładowaniu strony -->
-                                     <input type="date" name="date_from" class="form-control border-dark" value="{{ request.GET.date_from }}">
-                                 </div>
-                                 <div class="col-md-auto">
-                                    <label class="form-label fw-bold text-dark mb-1">Data do:</label>
-                                    <input type="date" name="date_to" class="form-control border-dark" value="{{ request.GET.date_to }}">
-                                 </div>
-                                 <div class="col-md-auto">
-                                    <label class"form-label fw-bold text-dark mb-1">Partia mięśniowa:</label>
-                                    <input type="text" name="muscle" class="form-control border-dark" placeholder="np. Klatka i plecy" value="{{ request.GET.muscle}}">
-                                 </div>
-                                 <div class="col-md-auto">
-                                    <button type="submit" class="btn btn-dark fw-bold px-4">Filtruj historię</button>
-                                    <a href="{% url 'dashboard' %}" class="btn btn-outline-danger fw-bold ms-2">Wyczyść filtry</a>
-                                 </div>
+                            <h6 class="fw-bold mb-3">Sterowanie wykresem</h6>
+                            <form method="GET">
+                                <label for="exercise_select" class="form-label fw-bold text-dark small mb-1">Wybierz ćwiczenie do analizy:</label>
+                                <select name="exercise" id="exercise_select" class="form-select border-dark fw-bold" onchange="this.form.submit()">
+                                    {% for exercise in unique_exercises %}
+                                        <option value="{{ exercise }}" {% if exercise == target_exercise %}selected{% endif %}>
+                                            {{ exercise }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
                             </form>
                         </div>
                     </div>
 
-                    <!-- Tabela z danymi -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card shadow-sm border-0">
-                                <div class="card-body p-0">
-                                    <table class="table table-hover mb-0">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th class="ps-4">Data treningu</th>
-                                                <th>Partia mięłsniowa</th>
-                                                <th>Szczegóły wykonania (Zestawienie serii)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- pętla Django - przechodzi przez każdy trening z bazy -->
-                                             {% for workout in page_obj %}
-                                             <tr>
-                                                <td class="align-middle ps-4 fw-bold">{{ workout.date|date:"d.m.Y" }}</td>
-                                                <td class="align-middle">
-                                                    <span class="badge bg-primary fs-6 mb-2 d-block" style="width: fit.content">{{ workout.target_muscle }}</span>
-                                                    
-                                                    <div class="d-flex gap-2">
-                                                        <!-- Zwykły przycisk do otwierania -->
-                                                         <a href="{% url 'workout_detail' workout.pk %}" class="btn btn-sm btn-outline-primary">Otwórz sesję treningową</a>
-                                                         <!-- Mini-formularz z zabezpieczeniem CSRF i JS-owym oknem potwierdzenia -->
-                                                         <form action="{% url 'delete_workout' workout.pk %}" method="POST" onsubmit="return confirm('Panie, chcesz Pan usunąć ten trening?');">
-                                                            {% csrf_token %}
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Usuń</button>
-                                                         </form> 
-                                                    </div>
-
-                                                </td>
-                                                <td class="py-3">
-                                                    <ul class="list-unstyled mb-0">
-                                                        <!-- Zagnieżdżona pętla - wyciąga wszystkie serie dla danego treningu -->
-                                                         {% for set in workout.sets.all %}
-                                                         <li class="mb-1 border-bottom pb-1">
-                                                            <span class="badge bg-secondary me-2">Seria {{ set.set_number }}</span>
-                                                            <span class="fw-semibold">{{ set.exercise }}</span> &mdash;
-                                                            <span class="text-danger fw-bold">{{ set.weight }} kg</span>
-                                                            x {{ set.reps}} powt.
-                                                         </li>
-                                                         {% endfor %}
-                                                    </ul>
-                                                </td>
-                                             </tr>
-                                             <!-- Jeśli baza jest pusta, pokażemy ten komunikat -->
-                                              {% empty %}
-                                              <tr>
-                                                <td colspan="3" class="text-center text-muted py-5">
-                                                <h4>Brak treningów w bazie</h4>
-                                                <p>Czas wybrać się na siłownie i wygenerować dane</p>
-                                                </td>
-                                              </tr>
-                                              {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Paginacja -->
-                    <div class="d-flex juistyfy-content-center mt-4 mb-5">
-                        <nav aria-label="Nawiguj">
-                            <ul class="pagination shadow-sm">
-
-                                <!-- Przycisk "Poprzednia" -->
-                                {% if page_obj.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link text-dark fw-bold" href="?page=1">&laquo; Pierwsza</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link text dark" href="?page={{ page_obj.previous_page_number }}">Poprzednia</a>
-                                    </li>
-                                {% else %}
-                                    <li class="page-item disabled"><span class="page-link">&laquo; Pierwsza</span></li>
-                                    <li class="page-item disabled"><span class="page-link">Poprzednia</span></li>
-                                {% endif %}
-
-                                <!-- Aktualna strona -->
-                                 <li class="page-item active" style="cursor: pointer;" onclick="jumpToPage({{ page_obj.paginator.num_pages }})" title="Kliknij, aby przejść do innej strony">
-                                    <span class="page-link bg-danger border-danger text-white">
-                                        Strona {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}
-                                        <span style="font-size: 0.75rem; margin-left: 4px;">🔍</span>
-                                    </span>
-                                 </li>
-
-                                 <!-- Przycisk "Następna" -->
-                                 {% if page_obj.has_next %}
-                                    <li class="page-list">
-                                        <a class="page-link text-dark" href="?page={{ page_obj.next_page_number }}">Następna</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link text-dark fw-bold" href="?page={{ page_obj.paginator_num_pages }}">Ostatnia &raquo;</a>
-                                    </li>
-                                 {% else %}
-                                    <li class="page-item disabled"><span class="page-link">Następna</span></li>
-                                    <li class="page-item disabled"><span class="page-link">Ostatnia &raquo;</span></li>
-                                 {% endif %}       
-                            </ul>
-                        </nav>
-
-                    </div>
+                </div>
             </div>
-                <div class="modal fade" id="metricsModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content border-0 shadow-lg">
 
-                            <div class="modal-header bg-dark text-white border-0">
-                                <h5 class="modal-title fw-bold">Raport sylwetkowy</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dissmis="modal" aria-label="Close"></button>
-                            </div>
+            <!-- 3. SEKCJA HISTORII: Filtry dat -->
+            <div class="card shadow-sm border-0 mb-4 bg-white bg-opacity-75">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <input type="hidden" name="exercise" value="{{ target_exercise }}">
+                        <div class="col-md-auto">
+                            <label class="form-label fw-bold text-dark mb-1">Data od:</label>
+                            <input type="date" name="date_from" class="form-control border-dark" value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-auto">
+                            <label class="form-label fw-bold text-dark mb-1">Data do:</label>
+                            <input type="date" name="date_to" class="form-control border-dark" value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="col-md-auto">
+                            <label class="form-label fw-bold text-dark mb-1">Partia mięśniowa:</label>
+                            <input type="text" name="muscle" class="form-control border-dark" placeholder="np. Klatka i plecy" value="{{ request.GET.muscle}}">
+                        </div>
+                        <div class="col-md-auto">
+                            <button type="submit" class="btn btn-dark fw-bold px-4">Filtruj historię</button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-danger fw-bold ms-2">Wyczyść filtry</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-                            <form action="{% url 'add_daily_metrics' %}" method="POST">
-                                {% csrf_token %}
-                                <div class="modal-body bg-light">
-
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold small text-uppercase">Dzisiejsza waga (kg).*</label>
-                                        <input type="number" step="0.01" name="weight" class="form-control form-control-lg border-dark" required placeholder="np. 89.50">
-                                    </div>
-                                    <hr>
-                                    <p class="small text-muted mb-2"><i class="fw-bold">Opcjonalnie:</i>Podsumowanie dnia:</p>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold small text-uppercase">Kalorie (kcal)</label>
-                                        <input type="number" name="calories" class="form-control border-dark" placeholder="Całkowita podaż:">
-                                    </div>
-
-                                    <div class="row g-2">
-                                        <div class="col-4">
-                                            <label class="form-label fw-bold small text-uppercase text-primary">Białko</label>
-                                            <input type="number" name="protein" class="form-control border-dark" placeholder="B (g):">
-                                        </div>
-                                        <div class="col-4">
-                                            <label class="form-label fw-bold small text-uppercase text-succes">Węgle</label>
-                                            <input type="number" name="carbs" class="form-control border-dark" placeholder="W (g):">
-                                        </div>
-                                        <div class="col-4">
-                                            <label class="form-label fw-bold small text-uppercase text-warning">Tłuszcze</label>
-                                            <input type="number" name="fats" class="form-control border-dark" placeholder="T (g):">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer bg-light border-0">
-                                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Anuluj</button>
-                                    <button type="submit" class="btn btn-outline-dark fw-bold px-4">Zapisz raport</button>
-                                </div>
-                            </form>
+            <!-- Tabela z danymi -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="ps-4">Data treningu</th>
+                                        <th>Partia mięśniowa</th>
+                                        <th>Szczegóły wykonania (Zestawienie serii)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for workout in page_obj %}
+                                    <tr>
+                                        <td class="align-middle ps-4 fw-bold">{{ workout.date|date:"d.m.Y" }}</td>
+                                        <td class="align-middle">
+                                            <span class="badge bg-primary fs-6 mb-2 d-block" style="width: fit-content">{{ workout.target_muscle }}</span>
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'workout_detail' workout.pk %}" class="btn btn-sm btn-outline-primary">Otwórz sesję treningową</a>
+                                                <form action="{% url 'delete_workout' workout.pk %}" method="POST" onsubmit="return confirm('Panie, chcesz Pan usunąć ten trening?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Usuń</button>
+                                                </form> 
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <ul class="list-unstyled mb-0">
+                                                {% for set in workout.sets.all %}
+                                                <li class="mb-1 border-bottom pb-1">
+                                                    <span class="badge bg-secondary me-2">Seria {{ set.set_number }}</span>
+                                                    <span class="fw-semibold">{{ set.exercise }}</span> &mdash;
+                                                    <span class="text-danger fw-bold">{{ set.weight }} kg</span>
+                                                    x {{ set.reps}} powt.
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-5">
+                                            <h4>Brak treningów w bazie</h4>
+                                            <p>Czas wybrać się na siłownie i wygenerować dane</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-            <script>
-                function jumpToPage(maxPages) {
-                    // Wyświetlamy okienko z prośbą o podanie numeru
-                    let targetPage = prompt('Do której strony chcesz przejść? (1 - ${maxPages})');
+            </div>
 
-                    // Jeśli użytkownik wpisał wartość i nie wcisnął "Anuluj"
-                    if (targetPage !== null && targetPage.trim() !== ''){
-                        let pageNum = parseInt(targetPage)
+            <!-- Paginacja -->
+            <div class="d-flex justify-content-center mt-4 mb-5">
+                <nav aria-label="Nawiguj">
+                    <ul class="pagination shadow-sm">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link text-dark fw-bold" href="?page=1">&laquo; Pierwsza</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link text-dark" href="?page={{ page_obj.previous_page_number }}">Poprzednia</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&laquo; Pierwsza</span></li>
+                            <li class="page-item disabled"><span class="page-link">Poprzednia</span></li>
+                        {% endif %}
 
-                        // Sprawdzamy czy wpisano poprawną liczbę z dostępnego zakresu
-                        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= maxPages) {
+                        <li class="page-item active" style="cursor: pointer;" onclick="jumpToPage({{ page_obj.paginator.num_pages }})" title="Kliknij, aby przejść do innej strony">
+                            <span class="page-link bg-danger border-danger text-white">
+                                Strona {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}
+                                <span style="font-size: 0.75rem; margin-left: 4px;">🔍</span>
+                            </span>
+                        </li>
 
-                            // Pobieramy obecny adres URL i zmieniamy tylko parametr 'page'
-                            // Dzięki temu nie zresetujesz sobie wykresu z ćwiczeniem!
-                            let url = new URL(window.location.href);
-                            url.searchParams.set('page', pageNum);
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link text-dark" href="?page={{ page_obj.next_page_number }}">Następna</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link text-dark fw-bold" href="?page={{ page_obj.paginator.num_pages }}">Ostatnia &raquo;</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Następna</span></li>
+                            <li class="page-item disabled"><span class="page-link">Ostatnia &raquo;</span></li>
+                        {% endif %}       
+                    </ul>
+                </nav>
+            </div>
+            
+        </div> <!-- Koniec container -->
 
-                            // Przeładowujemy stronę na nowy adres
-                            window.location.href = url.toString();
-                        }
-                        else {
-                            alert('Wpisana liczba musi być z zakresu od 1 do " + maxPages + "!');
-                        }
+        <!-- Modal -->
+        <div class="modal fade" id="metricsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-dark text-white border-0">
+                        <h5 class="modal-title fw-bold">Raport sylwetkowy</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{% url 'add_daily_metrics' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="modal-body bg-light">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase">Dzisiejsza waga (kg).*</label>
+                                <input type="number" step="0.01" name="weight" class="form-control form-control-lg border-dark" required placeholder="np. 89.50">
+                            </div>
+                            <hr>
+                            <p class="small text-muted mb-2"><i class="fw-bold">Opcjonalnie:</i> Podsumowanie dnia:</p>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase">Kalorie (kcal)</label>
+                                <input type="number" name="calories" class="form-control border-dark" placeholder="Całkowita podaż:">
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <label class="form-label fw-bold small text-uppercase text-primary">Białko</label>
+                                    <input type="number" name="protein" class="form-control border-dark" placeholder="B (g):">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label fw-bold small text-uppercase text-success">Węgle</label>
+                                    <input type="number" name="carbs" class="form-control border-dark" placeholder="W (g):">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label fw-bold small text-uppercase text-warning">Tłuszcze</label>
+                                    <input type="number" name="fats" class="form-control border-dark" placeholder="T (g):">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light border-0">
+                            <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Anuluj</button>
+                            <button type="submit" class="btn btn-outline-dark fw-bold px-4">Zapisz raport</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <!-- Skrypt konfigurujący Chart.js -->
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {    
+                const labels = {{ dates_json|safe }};
+                const weightsData = {{ weights_json|safe }};
+                const tonnageData = {{ tonnage_json|safe }};
+
+                const ctx = document.getElementById('progressChart').getContext('2d');
+
+                let progressChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Maksymalny ciężar (kg)',
+                            data: weightsData,
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true,
+                            pointBackgroundColor: 'rgba(220, 53, 69, 1)',
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {responsive: true, scales: {y: {beginAtZero: false } } }
+                });
+
+                const btn1RM = document.getElementById('btn-1rm');
+                const btnTonnage = document.getElementById('btn-tonnage');
+
+                btn1RM.addEventListener('click', function() {
+                    progressChart.data.datasets[0].data = weightsData;
+                    progressChart.data.datasets[0].label = "Maksymalny ciężar (kg)";
+                    progressChart.data.datasets[0].borderColor = 'rgba(220, 53, 69 ,1)';
+                    progressChart.data.datasets[0].backgroundColor = 'rgba(220, 53, 69, 0.2)';
+                    progressChart.data.datasets[0].pointBackgroundColor = 'rgba(220, 53, 69, 1)';
+                    btn1RM.classList.replace('btn-outline-danger', 'btn-danger');
+                    btnTonnage.classList.replace('btn-primary', 'btn-outline-primary');
+                    progressChart.update();
+                });
+
+                btnTonnage.addEventListener('click', function() {
+                    progressChart.data.datasets[0].data = tonnageData;
+                    progressChart.data.datasets[0].label = "Całkowity Tonaż (kg)";
+                    progressChart.data.datasets[0].borderColor = 'rgba(13, 110, 253, 1)';
+                    progressChart.data.datasets[0].backgroundColor = 'rgba(13, 110, 253, 0.2)';
+                    progressChart.data.datasets[0].pointBackgroundColor = 'rgba(13, 110, 253, 1)';
+                    btnTonnage.classList.replace('btn-outline-primary', 'btn-primary');
+                    btn1RM.classList.replace('btn-danger', 'btn-outline-danger');
+                    progressChart.update();
+                });
+            });
+        </script>
+
+        <!-- Skrypt Paginacji -->
+        <script>
+            function jumpToPage(maxPages) {
+                let targetPage = prompt(`Do której strony chcesz przejść? (1 - ${maxPages})`);
+                if (targetPage !== null && targetPage.trim() !== ''){
+                    let pageNum = parseInt(targetPage)
+                    if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= maxPages) {
+                        let url = new URL(window.location.href);
+                        url.searchParams.set('page', pageNum);
+                        window.location.href = url.toString();
                     }
-                } 
-            </script>
-        </body>
+                    else {
+                        alert("Wpisana liczba musi być z zakresu od 1 do " + maxPages + "!");
+                    }
+                }
+            } 
+        </script>
+    </body>
 </html>
