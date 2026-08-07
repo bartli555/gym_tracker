@@ -295,6 +295,7 @@
                 const labels = {{ dates_json|safe }};
                 const weightsData = {{ weights_json|safe }};
                 const tonnageData = {{ tonnage_json|safe }};
+                const bodyWeightsData = {{body_weights_json|safe}};
 
                 const ctx = document.getElementById('progressChart').getContext('2d');
 
@@ -302,19 +303,57 @@
                     type: 'line',
                     data: {
                         labels: labels,
-                        datasets: [{
-                            label: 'Maksymalny ciężar (kg)',
-                            data: weightsData,
-                            borderColor: 'rgba(220, 53, 69, 1)',
-                            backgroundColor: 'rgba(220, 53, 69, 0.2)',
-                            borderWidth: 3,
-                            tension: 0.3,
-                            fill: true,
-                            pointBackgroundColor: 'rgba(220, 53, 69, 1)',
-                            pointRadius: 5
-                        }]
+                        datasets: [
+                            {
+                                // Wykres siłowy (Zawsze indeks 0) - przypięty do LEWEJ osi
+                                label: 'Maksymalny ciężar (kg)',
+                                data: weightsData,
+                                borderColor: 'rgba(220, 53, 69, 1)',
+                                backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                                borderWidth: 3,
+                                tension: 0.3,
+                                fill: true,
+                                pointBackgroundColor: 'rgba(220, 53, 69, 1)',
+                                pointRadius: 5,
+                                yAxisID: 'y' //główna oś 
+                            },
+                            {
+                                // Wykres wagi ciała (Zawsze indeks 1) - przypięty do prawej osi
+                                label: 'Waga ciała (kg)',
+                                data: bodyWeightsData,
+                                borderColor: 'rgba (255 ,193, 7, 1)',
+                                backgroundColor: 'transparent',
+                                borderWidth: 2,
+                                borderDash: [5,5], // jakieś przerywane chujostwo dla kontrastu
+                                tension: 0.3,
+                                pointBackgroundColor: 'rgba(255, 193, 7, 1)',
+                                pointRadius: 4,
+                                spanGaps: true, // ignoruje braki i łączy linię
+                                yAxisID: 'y1' //druga oś
+                            }
+                        ]
                     },
-                    options: {responsive: true, scales: {y: {beginAtZero: false } } }
+                    options: {
+                        responsive: true,
+                        scales: {
+                            // Oś lewa (ciężar na sztandze / tonaż)
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: false,
+                                title: {display: true, text: 'Obciążenie (kg)'}
+                            },
+                            // oś prawa (waga cielska)
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: false,
+                                title: {display: true, text: 'Masa ciała (kg)'}
+                            }
+                        }
+                    }
                 });
 
                 const btn1RM = document.getElementById('btn-1rm');
@@ -326,6 +365,7 @@
                     progressChart.data.datasets[0].borderColor = 'rgba(220, 53, 69 ,1)';
                     progressChart.data.datasets[0].backgroundColor = 'rgba(220, 53, 69, 0.2)';
                     progressChart.data.datasets[0].pointBackgroundColor = 'rgba(220, 53, 69, 1)';
+                    
                     btn1RM.classList.replace('btn-outline-danger', 'btn-danger');
                     btnTonnage.classList.replace('btn-primary', 'btn-outline-primary');
                     progressChart.update();
@@ -337,6 +377,7 @@
                     progressChart.data.datasets[0].borderColor = 'rgba(13, 110, 253, 1)';
                     progressChart.data.datasets[0].backgroundColor = 'rgba(13, 110, 253, 0.2)';
                     progressChart.data.datasets[0].pointBackgroundColor = 'rgba(13, 110, 253, 1)';
+
                     btnTonnage.classList.replace('btn-outline-primary', 'btn-primary');
                     btn1RM.classList.replace('btn-danger', 'btn-outline-danger');
                     progressChart.update();

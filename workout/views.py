@@ -16,12 +16,6 @@ def dashboard(request):
     # Wyciągamy ostatni zaraportowany dzień (first() bierze pierwszy wynik z posortowanej listy)
     latest_metrics = DailyMetrics.objects.order_by('-date').first()
 
-     # podział na strony
-
-    paginator = Paginator(all_workouts, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
     # Łapiemy parametry dat z adresu URL
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
@@ -34,6 +28,12 @@ def dashboard(request):
          all_workouts = all_workouts.filter(date__lte=date_to) # lte = less than or equal (do)  
     if muscle_query:
          all_workouts = all_workouts.filter(target_muscle__icontains=muscle_query)        
+
+     # podział na strony
+
+    paginator = Paginator(all_workouts, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     # Wyciągamy listę unikalnych nazw ćwiczeń z bazy
     uniqe_exercises = TrainingSet.objects.values_list('exercise', flat=True).distinct()
@@ -50,6 +50,7 @@ def dashboard(request):
     dates = []
     weights = []
     tonnage = []
+    body_weights = []
 
     if target_exercise:
          qs = TrainingSet.objects.filter(exercise__icontains=target_exercise) \
@@ -60,10 +61,20 @@ def dashboard(request):
                                 ) \
                                 .order_by('workout__date')
          
-         dates = [str(entry['workout__date']) for entry in qs]
-         weights = [float(entry['max_weight'] or 0) for entry in qs]
-         tonnage = [float(entry['total_tonnage'] or 0) for entry in qs]                       
+          # pętla zamiast listy, od razu możemy szukać wagi dla konkretnej daty
+         for entry in qs:
+               dates_val = entry['workout__date']
+               dates.append(str(dates_val))
+               weights.append(float(entry['max_weight'] or 0))
+               tonnage.append(float(entry['total_tonnage'] or 0))
 
+               # szukamy wagi w modelu DailyMetrics dla tej konkretnej daty
+               metric = DailyMetrics.objects.filter(date__lte=dates_val).order_by('-date').first()
+               if metric and metric.weight:
+                    body_weights.append(float(metric.weight))
+               else:
+                    body_weights.append(None) # null dla JavaScriptu (spanGaps połączy linię)      
+              
     context = {
         'page_obj': page_obj,       
         'workouts': all_workouts,
@@ -72,6 +83,7 @@ def dashboard(request):
         'dates_json': json.dumps(dates),
         'weights_json': json.dumps(weights),
         'tonnage_json': json.dumps(tonnage),
+        'body_weights_json': json.dumps(body_weights),
         'latest_metrics': latest_metrics
     }
     # Przekazujemy paczkę do szablonu, który zaraz stworzymy
