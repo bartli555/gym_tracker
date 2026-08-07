@@ -74,6 +74,9 @@ def dashboard(request):
                     body_weights.append(float(metric.weight))
                else:
                     body_weights.append(None) # null dla JavaScriptu (spanGaps połączy linię)      
+
+     # Liczymy całkowity tonaż ze wszystkich serii w bazie
+    lifetime_tonnage = TrainingSet.objects.aggregate(total=Sum(F('weight') * F('reps')))['total'] or 0
               
     context = {
         'page_obj': page_obj,       
@@ -84,7 +87,8 @@ def dashboard(request):
         'weights_json': json.dumps(weights),
         'tonnage_json': json.dumps(tonnage),
         'body_weights_json': json.dumps(body_weights),
-        'latest_metrics': latest_metrics
+        'latest_metrics': latest_metrics,
+        'lifetime_tonnage': lifetime_tonnage
     }
     # Przekazujemy paczkę do szablonu, który zaraz stworzymy
     return render(request, 'workout/dashboard.html', context)
