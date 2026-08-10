@@ -72,7 +72,8 @@
                         <div class="card-body">
                             <!-- Przyciski do przełączania wykresu -->
                             <div class="mb-3 text-center chart-controls">
-                                <button type="button" id="btn-1rm" class="btn btn-danger btn-sm px-4 fw-bold shadow-sm">Top Set (1RM)</button>
+                                <button type="button" id="btn-max-weight" class="btn btn-danger btn-sm px-4 fw-bold shadow-sm">Najwyższy ciężar</button>
+                                <button type="button" id="btn-est-1rm" class="btn btn-outline-success btn-sm px-4 fw-bold shadow-sm ms-2">Szacowany 1RM</button>
                                 <button type="button" id="btn-tonnage" class="btn btn-outline-primary btn-sm px-4 fw-bold shadow-sm ms-2">Całkowity Tonaż</button>
                             </div>
                             <canvas id="progressChart" height="110"></canvas>
@@ -298,7 +299,9 @@
         <script>
             document.addEventListener("DOMContentLoaded", function() {    
                 const labels = {{ dates_json|safe }};
-                const weightsData = {{ weights_json|safe }};
+
+                const maxWeightsData = {{ max_weights_json|safe }};
+                const est1RMData = {{ estimated_1rms_json|safe }};
                 const tonnageData = {{ tonnage_json|safe }};
                 const bodyWeightsData = {{body_weights_json|safe}};
 
@@ -311,8 +314,8 @@
                         datasets: [
                             {
                                 // Wykres siłowy (Zawsze indeks 0) - przypięty do LEWEJ osi
-                                label: 'Maksymalny ciężar (kg)',
-                                data: weightsData,
+                                label: 'Najwyższy ciężar (kg)',
+                                data: maxWeightsData,
                                 borderColor: 'rgba(220, 53, 69, 1)',
                                 backgroundColor: 'rgba(220, 53, 69, 0.2)',
                                 borderWidth: 3,
@@ -361,30 +364,46 @@
                     }
                 });
 
-                const btn1RM = document.getElementById('btn-1rm');
-                const btnTonnage = document.getElementById('btn-tonnage');
+                const btnMax = document.getElementById('btn-max-weight');
+                const btnEst = document.getElementById('btn-est-1rm')
+                const btnTon = document.getElementById('btn-tonnage');
 
-                btn1RM.addEventListener('click', function() {
-                    progressChart.data.datasets[0].data = weightsData;
-                    progressChart.data.datasets[0].label = "Maksymalny ciężar (kg)";
+                btnMax.addEventListener('click', function() {
+                    progressChart.data.datasets[0].data = maxWeightsData;
+                    progressChart.data.datasets[0].label = "Najwyższy ciężar (kg)";
                     progressChart.data.datasets[0].borderColor = 'rgba(220, 53, 69 ,1)';
                     progressChart.data.datasets[0].backgroundColor = 'rgba(220, 53, 69, 0.2)';
                     progressChart.data.datasets[0].pointBackgroundColor = 'rgba(220, 53, 69, 1)';
                     
-                    btn1RM.classList.replace('btn-outline-danger', 'btn-danger');
-                    btnTonnage.classList.replace('btn-primary', 'btn-outline-primary');
+                    btnMax.className = "btn btn-danger btn-sm px-4 fw-bold shadow-sm";
+                    btnEst.className = "btn btn-outline-success btn-sm px-4 fw-bold shadow-sm ms-2";
+                    btnTon.className = "btn btn-outline-primary btn-sm px-4 fw-bold shadow-sm ms-2";
                     progressChart.update();
                 });
 
-                btnTonnage.addEventListener('click', function() {
+                btnEst.addEventListener('click', function() {
+                    progressChart.data.datasets[0].data = est1RMData;
+                    progressChart.data.datasets[0].label = "Szacowany 1RM (kg)";
+                    progressChart.data.datasets[0].borderColor = 'rgba(25, 135, 84 ,1)';
+                    progressChart.data.datasets[0].backgroundColor = 'rgba(25, 135, 84, 0.2)';
+                    progressChart.data.datasets[0].pointBackgroundColor = 'rgba(25, 135, 84, 1)';
+                    
+                    btnEst.className = "btn btn-success btn-sm px-4 fw-bold shadow-sm ms-2";
+                    btnMax.className = "btn btn-outline-danger btn-sm px-4 fw-bold shadow-sm";
+                    btnTon.className = "btn btn-outline-primary btn-sm px-4 fw-bold shadow-sm ms-2";
+                    progressChart.update();
+                });
+
+                btnTon.addEventListener('click', function() {
                     progressChart.data.datasets[0].data = tonnageData;
                     progressChart.data.datasets[0].label = "Całkowity Tonaż (kg)";
                     progressChart.data.datasets[0].borderColor = 'rgba(13, 110, 253, 1)';
                     progressChart.data.datasets[0].backgroundColor = 'rgba(13, 110, 253, 0.2)';
                     progressChart.data.datasets[0].pointBackgroundColor = 'rgba(13, 110, 253, 1)';
 
-                    btnTonnage.classList.replace('btn-outline-primary', 'btn-primary');
-                    btn1RM.classList.replace('btn-danger', 'btn-outline-danger');
+                    btnTon.className = "btn btn-primary btn-sm px-4 fw-bold shadow-sm ms-2";
+                    btnMax.className = "btn btn-outline-danger btn-sm px-4 fw-bold shadow-sm";
+                    btnEst.className = "btn btn-outline-success btn-sm px-4 fw-bold shadow-sm ms-2";
                     progressChart.update();
                 });
             });

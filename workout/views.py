@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Workout, TrainingSet, DailyMetrics
 from .forms import WorkoutForm, TrainingSetForm
-from django.db.models import Max, Sum, F
+from django.db.models import Max, Sum, F, ExpressionWrapper, FloatField
 import json
 from django.core.paginator import Paginator
 
@@ -48,15 +48,23 @@ def dashboard(request):
 
     # Filtrujemy dane tylko dla wybranego ćwiczenia (lub domyślnego)
     dates = []
-    weights = []
+    max_weights = []
+    estimated_1rms = []
     tonnage = []
     body_weights = []
 
     if target_exercise:
          qs = TrainingSet.objects.filter(exercise__icontains=target_exercise) \
-                                .values('workout__date') \
                                 .annotate(
+                                     epley_1rm = ExpressionWrapper(
+                                          F('weight') * (1.0 + (F('reps') * 1.0) / 30),
+                                          output_field=FloatField()
+                                     )
+                                ) \
+                                .values('workout__date') \
+                                .annotate (
                                      max_weight = Max('weight'),
+                                     max_epley = Max('epley_1rm'),
                                      total_tonnage = Sum(F('weight') *F('reps'))
                                 ) \
                                 .order_by('workout__date')
@@ -65,7 +73,9 @@ def dashboard(request):
          for entry in qs:
                dates_val = entry['workout__date']
                dates.append(str(dates_val))
-               weights.append(float(entry['max_weight'] or 0))
+
+               max_weights.append(float(entry['max_weight'] or 0))
+               estimated_1rms.append(round(float(entry['max_epley'] or 0), 1))
                tonnage.append(float(entry['total_tonnage'] or 0))
 
                # szukamy wagi w modelu DailyMetrics dla tej konkretnej daty
@@ -84,7 +94,8 @@ def dashboard(request):
         'unique_exercises': uniqe_exercises,
         'target_exercise': target_exercise,
         'dates_json': json.dumps(dates),
-        'weights_json': json.dumps(weights),
+        'max_weights_json': json.dumps(max_weights),
+        'estimated_1rms_json': json.dumps(estimated_1rms),
         'tonnage_json': json.dumps(tonnage),
         'body_weights_json': json.dumps(body_weights),
         'latest_metrics': latest_metrics,
