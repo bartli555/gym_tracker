@@ -35,3 +35,10 @@ class DailyMetrics(models.Model):
 
     def __str__(self):
         return f"{self.date} - {self.weight} kg"
+
+class ExerciseMapping(models.Model):
+    exercise_name = models.CharField(max_length=255, unique=True, verbose_name="Nazwa Ćwiczenia (Hevy)")
+    target_muscle = models.CharField(max_length=100, verbose_name="Partia mięśniowa")
+
+    def __str__(self):
+        return f"{self.exercise_name} -> {self.target_muscle}" 

@@ -3,7 +3,7 @@ from datetime import datetime, date
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Workout, TrainingSet, DailyMetrics
+from .models import Workout, TrainingSet, DailyMetrics, ExerciseMapping
 from .forms import WorkoutForm, TrainingSetForm
 from django.db.models import Max, Sum, F, ExpressionWrapper, FloatField
 import json
@@ -285,10 +285,20 @@ def upload_hevy_csv(request):
                set_number = int(clean_row['set_index']) if clean_row.get('set_index') else 0 
 
                # 1. Krok pierwszy: Szukamy (lub tworzymy) Trening dla danego dnia
+               # Odpytujemy nasz nowy słownik z bazy danych
+               mapping = ExerciseMapping.objects.filter(exercise_name=exercise_name).first()
+               
+               # Jeśli znalazł dopasowanie, bierze partię. Jeśli nie, oznacza jako "Brak kategoryzacji"
+               if mapping:
+                   assigned_muscle = mapping.target_muscle
+               else:
+                   assigned_muscle = 'Brak kategoryzacji'
+
+               # 1. Krok pierwszy: Szukamy (lub tworzymy) Trening dla danego dnia
                workout, w_created = Workout.objects.get_or_create(
                     date = workout_date,
                     defaults={
-                         'target_muscle': 'Import z Hevy' # Domyślna partia dla całego dnia
+                         'target_muscle': assigned_muscle 
                     }
                )
                if w_created:
