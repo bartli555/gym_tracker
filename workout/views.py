@@ -1,5 +1,5 @@
 import csv
-from datetime import datetime
+from datetime import datetime, date
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
@@ -87,7 +87,43 @@ def dashboard(request):
 
      # Liczymy całkowity tonaż ze wszystkich serii w bazie
     lifetime_tonnage = TrainingSet.objects.aggregate(total=Sum(F('weight') * F('reps')))['total'] or 0
-              
+
+     # Mapa zmęczenia
+    muscle_recovery = []
+    today = date.today()
+
+    # Szukamy wszystkich unikalnych partii, które kiedykolwiek trenowaliśmy
+    trained_muscles = Workout.objects.values_list('target_muscle', flat=True).distinct()
+
+    for muscle in trained_muscles:
+         # Pomijamy puste wpisy lub te z domyślnego importu
+         if not muscle:
+          continue
+
+         #szukamy najnowszego treningu dla konkretnej partii
+         last_workout = Workout.objects.filter(target_muscle=muscle).order_by('-date').first()
+
+         if last_workout:
+              days_passed = (today - last_workout.date).days
+
+              # Przypisujemy kolory i szerokość paska (w procentach) na podstawie dni
+              if days_passed <= 1:
+                   status_color = 'danger' #cyrwony
+                   width = 25
+              elif days_passed <= 3:
+                   status_color = 'warning' #żółty
+                   width = 65
+              else:
+                   status_color = 'success' #zielony
+                   width = 100
+              muscle_recovery.append({
+                   'name': muscle,
+                   'days': days_passed,
+                   'color': status_color,
+                   'width': width
+              })
+    muscle_recovery = sorted(muscle_recovery, key=lambda x: x['days'], reverse=True)
+
     context = {
         'page_obj': page_obj,       
         'workouts': all_workouts,
@@ -99,7 +135,8 @@ def dashboard(request):
         'tonnage_json': json.dumps(tonnage),
         'body_weights_json': json.dumps(body_weights),
         'latest_metrics': latest_metrics,
-        'lifetime_tonnage': lifetime_tonnage
+        'lifetime_tonnage': lifetime_tonnage,
+        'muscle_recovery': muscle_recovery
     }
     # Przekazujemy paczkę do szablonu, który zaraz stworzymy
     return render(request, 'workout/dashboard.html', context)

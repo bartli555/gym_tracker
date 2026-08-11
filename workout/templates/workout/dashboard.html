@@ -124,7 +124,25 @@
                             </form>
                         </div>
                     </div>
+                    <div class="card shadow-sm border-0 bg-white bg-opacity-75">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Mapa zmęczenia</h6>
 
+                            {% for muscle in muscle_recovery %}
+                            <div class="mb-3">
+                                <div class="d-flex jusity-content-between mb-1">
+                                    <span class="small fw-bold text-dark text-uppercase">{{ muscle.name }}</span>
+                                    <span class="small fw-bold text-muted">{{ muscle.days }} dni temu</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-{{ muscle.color }}" role="progressbar" style="width: {{ muscle.width }}%;"></div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="small-text-muted mb-0">Brak danych o trenowanych partiach, do roboty.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
 
