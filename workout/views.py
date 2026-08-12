@@ -369,3 +369,27 @@ def upload_hevy_measurements(request):
           messages.success(request,f'Pomiary wgrane! Zaktualizowano parametry dla {'metrics_updated'} dni')
           return redirect('dashboard')
      return render(request, 'workout/upload_measurements.html')
+
+@login_required
+def generate_exercise_dictionary(request):
+     # Wyciągamy wszystkie unikalne nazwy ćwiczeń z historii
+     unique_exercises = TrainingSet.objects.values_list('exercise', flat=True).distinct()
+
+     created_count = 0
+
+     for exercise_name in unique_exercises:
+          if not exercise_name:
+               continue
+
+          # get_or_create to magiczna funkcja - tworzy wpis tylko wtedy, gdy go jeszcze nie ma.
+          # Dzięki temu możesz odpalać ten skrypt wielokrotnie bez obaw o duplikaty.
+          mapping, created = ExerciseMapping.objects.get_or_create(
+               exercise_name = exercise_name,
+               defaults={'target_muscle': 'Do uzupełnienia'} # Flaga, która rzuca się w oczy w panelu
+          )
+
+          if created:
+               created_count += 1
+
+     messages.success(request, f"Dodano {'created_count'} nowych ćwiczeń do słownika!")
+     return redirect('dashboard')

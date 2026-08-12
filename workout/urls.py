@@ -14,5 +14,6 @@ urlpatterns = [
     path('metrics/add', views.add_daily_metrics, name='add_daily_metrics'),
     path('import-hevy/', views.upload_hevy_csv, name="upload_hevy_csv"),
     path('import-wagi/', views.upload_hevy_measurements, name='upload_hevy_measurements'),
+    path('generate-dict/', views.generate_exercise_dictionary, name='generate_exercise_dictionary'),
 ]
 
