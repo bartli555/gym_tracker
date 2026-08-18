@@ -93,18 +93,22 @@ def dashboard(request):
     today = date.today()
 
     # Szukamy wszystkich unikalnych partii, które kiedykolwiek trenowaliśmy
-    trained_muscles = Workout.objects.values_list('target_muscle', flat=True).distinct()
+    trained_muscles = ExerciseMapping.objects.filter(
+        exercise_name__in=TrainingSet.objects.values('exercise')
+    ).exclude(target_muscle='DO UZUPEŁNIENIA').exclude(target_muscle='Brak kategoryzacji').values_list('target_muscle', flat=True).distinct()
 
     for muscle in trained_muscles:
          # Pomijamy puste wpisy lub te z domyślnego importu
          if not muscle:
           continue
 
-         #szukamy najnowszego treningu dla konkretnej partii
-         last_workout = Workout.objects.filter(target_muscle=muscle).order_by('-date').first()
+         #szukamy najświeższej serii treningowej dla danego mięśnia, niezależnie od tego, jakim był w kolejności
+         latest_set = TrainingSet.objects.filter(
+            exercise__in=ExerciseMapping.objects.filter(target_muscle=muscle).values('exercise_name')
+        ).order_by('-workout__date').first()
 
-         if last_workout:
-              days_passed = (today - last_workout.date).days
+         if latest_set:
+              days_passed = (today - latest_set.workout.date).days
 
               # Przypisujemy kolory i szerokość paska (w procentach) na podstawie dni
               if days_passed <= 1:
