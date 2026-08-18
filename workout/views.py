@@ -54,7 +54,7 @@ def dashboard(request):
     body_weights = []
 
     if target_exercise:
-         qs = TrainingSet.objects.filter(exercise__icontains=target_exercise) \
+         qs = TrainingSet.objects.filter(exercise=target_exercise) \
                                 .annotate(
                                      epley_1rm = ExpressionWrapper(
                                           F('weight') * (1.0 + (F('reps') * 1.0) / 30),
