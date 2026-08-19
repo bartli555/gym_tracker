@@ -397,3 +397,47 @@ def generate_exercise_dictionary(request):
 
      messages.success(request, f"Dodano {'created_count'} nowych ćwiczeń do słownika!")
      return redirect('dashboard')
+
+@login_required
+def wall_of_fame(request):
+    
+# 1. wyciągamy wszystkie ćwiczenia które robiliśmy
+    unique_exercises = TrainingSet.objects.values_list('exercise', flat=True).distinct()
+    
+    mapped_records = []
+
+    for exercise in unique_exercises:
+        if not exercise:
+            continue
+            
+        # 2. pobieramy wszystkie wykonane serie dla tego konkretnego ćwiczenia
+        exercise_sets = TrainingSet.objects.filter(exercise=exercise)
+        
+        # 3. wyciągamy największy ciężar na sztandze
+        max_weight = exercise_sets.aggregate(Max('weight'))['weight__max'] or 0.0
+        
+        # 4. liczymy szacowany 1rm dla każdej serii
+        max_epley = 0.0
+        for s in exercise_sets:
+            if s.weight and s.reps:
+                # Wzór Epleya: Ciężar * (1 + Powtórzenia / 30)
+                epley_val = s.weight * (1.0 + (s.reps * 1.0) / 30.0)
+                if epley_val > max_epley:
+                    max_epley = epley_val
+        
+        # 5. dopasowujemy partię mięśniową z naszego słownika
+        mapping = ExerciseMapping.objects.filter(exercise_name=exercise).first()
+        muscle = mapping.target_muscle if mapping else 'Brak kategoryzacji'
+        
+        # 6. dodajemy paczkę do listy wynikowej
+        mapped_records.append({
+            'exercise': exercise,
+            'muscle': muscle,
+            'max_weight': float(max_weight),
+            'max_epley': round(max_epley, 1)
+        })
+
+    # 7. sortujemy całą gablotę malejąco według największego ciężaru
+    mapped_records = sorted(mapped_records, key=lambda x: x['max_weight'], reverse=True)
+
+    return render(request, 'workout/wall_of_fame.html', {'records': mapped_records})
