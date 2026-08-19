@@ -8,6 +8,7 @@ from .forms import WorkoutForm, TrainingSetForm
 from django.db.models import Max, Sum, F, ExpressionWrapper, FloatField
 import json
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 
 @login_required
 def dashboard(request):
@@ -441,3 +442,38 @@ def wall_of_fame(request):
     mapped_records = sorted(mapped_records, key=lambda x: x['max_weight'], reverse=True)
 
     return render(request, 'workout/wall_of_fame.html', {'records': mapped_records})
+
+
+@login_required
+def export_workouts_csv(request):
+     # 1. Tworzymy surową odpowiedź i informujemy przeglądarkę, że to plik CSV
+     response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+     # 2. Wymuszamy pobranie pliku o konkretnej nazwie
+     response['Content-Disposition'] = 'attachment; filename="gym_tracker_export.csv'
+     # 3. Podpinamy wbudowanego w Pythona "pisarza" CSV pod naszą odpowiedź
+     writer = csv.writer(response, delimiter=';')
+     # 4. Zapisujemy pierwszy wiersz, czyli nagłówki kolumn
+     writer.writerow(['Data', 'Partia_miesniowa', 'Cwiczenie', 'Nr_serii', 'Powtorzenia', 'Ciezar_kg', 'Szacowany_1RM'])
+     # 5. Wyciągamy z bazy wszystkie serie, posortowane od najnowszych
+     # Używamy select_related, żeby zoptymalizować zapytania do powiązanej tabeli Workout
+     all_sets = TrainingSet.objects.select_related('workout').order_by('-workout__date', 'id')
+     # 6. Lecimy pętlą po każdej serii i w locie pakujemy dane do pliku
+     for s in all_sets:
+          # Tłumaczymy ćwiczenie na partię mięśniową z naszego słownika
+          mapping = ExerciseMapping.objects.filter(exercise_name=s.exercise).first()
+          muscle = mapping.target_muscle if mapping else 'Brak kategorii'
+
+          # Wyliczamy nasz ulubiony wzór Epleya, żeby mieć ten parametr od razu w zbiorze
+          epley_1rm = round(s.weight * (1.0 + (s.reps / 30.0)), 1) if s.weight and s.reps else 0.0
+
+          # Zapisujemy wiersz z danymi
+          writer.writerow([
+               s.workout.date.strftime('%Y-%m-%d'),
+               muscle,
+               s.exercise,
+               s.set_number,
+               s.reps,
+               s.weight,
+               epley_1rm
+          ])
+     return response

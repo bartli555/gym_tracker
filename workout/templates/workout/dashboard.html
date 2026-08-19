@@ -53,6 +53,7 @@
                     <a href="{% url 'upload_hevy_csv' %}" class="btn btn-dark shadow-sm"><i class="bi bi-cloud-upload me-1"></i>Import Treningów</a>
                     <a href="{% url 'upload_hevy_measurements' %}" class="btn btn-warning shadow-sm fw-bold"><i class="bi bi-speedometer2 me-1"></i>Import Wagi</a>
                     <a href="{% url 'wall_of_fame' %}" class="btn btn-primary shadow-sm fw-bold">🏆 Ściana Chwały</a>
+                    <a href="{% url 'export_workouts_csv' %}" class="btn btn-info shadow-sm fw-bold"><i class="bi bi-download me-1"></i>Pobierz CSV</a>
                     
                     <form action="{% url 'logout' %}" method="POST" class="ms-md-2">
                         {% csrf_token %}
