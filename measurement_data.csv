@@ -1,4 +1,4 @@
-date,weight_kg,fat_percent,neck_cm,shoulder_cm,chest_cm,left_bicep_cm,right_bicep_cm,left_forearm_cm,right_forearm_cm,abdomen_cm,waist_cm,hips_cm,left_thigh_cm,right_thigh_cm,left_calf_cm,right_calf_cm
+"date","weight_kg","fat_percent","neck_cm","shoulder_cm","chest_cm","left_bicep_cm","right_bicep_cm","left_forearm_cm","right_forearm_cm","abdomen_cm","waist_cm","hips_cm","left_thigh_cm","right_thigh_cm","left_calf_cm","right_calf_cm"
 "4 May 2026, 00:00",96.5,,,,,,,,,,,,,,,
 "16 Jun 2026, 00:00",94.3,,,,,,,,,,,,,,,
 "21 Jun 2026, 00:00",93.6,,,,,,,,,,,,,,,
@@ -12,4 +12,6 @@ date,weight_kg,fat_percent,neck_cm,shoulder_cm,chest_cm,left_bicep_cm,right_bice
 "8 Aug 2026, 00:00",87.6,,,,,,,,,,,,,,,
 "15 Aug 2026, 00:00",87.2,,,,,,,,,,,,,,,
 "17 Aug 2026, 00:00",87,,,,,,,,,,,,,,,
-"25 Aug 2026, 00:00",86.6,,,,,,,,,,,,,,,
+"21 Aug 2026, 00:00",86.6,,,,,,,,,,,,,,,
+"23 Aug 2026, 00:00",86.1,,,,,,,,,,,,,,,
+"26 Aug 2026, 00:00",86.3,,,,,,,,,,,,,,,

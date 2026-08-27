@@ -279,7 +279,7 @@ def upload_hevy_csv(request):
                     date_obj = datetime.strptime(clean_row['start_time'], '%d %b %Y, %H:%M')
                     workout_date = date_obj.date()
                except (ValueError, KeyError):
-                    # Jeśli wiersz jest uszkodzony lub pusty, lecimy do następnego
+                     # Jeśli wiersz jest uszkodzony lub pusty, lecimy do następnego
                     continue     
 
                exercise_name = clean_row['exercise_title']
