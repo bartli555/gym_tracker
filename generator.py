@@ -112,7 +112,7 @@ plt.title('Korelacja Szczytowej Siły i Masy Ciała: Wyciskanie Sztangi Leżąc'
 ax1.set_xticks(df_bench['Data'])
 
 # 2. Obracamy napisy o 45 stopni i formatujemy je czysto (RRRR-MM-DD), żeby się nie zlewały
-ax1.set_xticklabels(df_bench['Data'].dt.strftime("%Y-%m-%d), rotation=45)
+ax1.set_xticklabels(df_bench['Data'].dt.strftime("%Y-%m-%d"), rotation=45)
 
 
 # %%
@@ -1039,7 +1039,7 @@ if wspolczynnik_wzostu > 0:
 
     print(f'Raport predykcyjny ML: {cwiczenie}')
     print(f'Obecne tempo wzrostu: {wspolczynnik_wzostu * 7:.2f} kilo na tydzień')
-    print(f'Prognozowana data osiągnięcia {cel_kg} kg to {data_celu.strftime('%Y-%m-%d')}')
+    print(f'Prognozowana data osiągnięcia {cel_kg} kg to {data_celu.strftime("%Y-%m-%d")}')
 
 else:
     print('Algorytm wykrył stagnację lub spadki, potrzebujesz zbudować siłę, aby zadziałało')    
