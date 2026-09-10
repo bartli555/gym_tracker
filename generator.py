@@ -112,7 +112,7 @@ plt.title('Korelacja Szczytowej Siły i Masy Ciała: Wyciskanie Sztangi Leżąc'
 ax1.set_xticks(df_bench['Data'])
 
 # 2. Obracamy napisy o 45 stopni i formatujemy je czysto (RRRR-MM-DD), żeby się nie zlewały
-ax1.set_xticklabels(df_bench['Data'].dt.strftime('%Y-%m-%d'), rotation=45)
+ax1.set_xticklabels(df_bench['Data'].dt.strftime("%Y-%m-%d), rotation=45)
 
 
 # %%
@@ -136,7 +136,7 @@ ax1.grid(True, linestyle='--', alpha=0.7)
 
 # Wymuszamy etykiety dat na osi X, żeby znowu nie zniknęły
 ax1.set_xticks(df_front['Data'])
-ax1.set_xticklabels(df_front['Data'].dt.strftime('%Y-%m-%d'), rotation=45)
+ax1.set_xticklabels(df_front['Data'].dt.strftime("%Y-%m-%d"), rotation=45)
 
 # --- PRAWA OŚ (MASA CIAŁA) ---
 ax2 = ax1.twinx()
@@ -184,7 +184,7 @@ for cwiczenie in wielka_czworka:
     ax1.grid(True, linestyle='--', alpha=0.7)
     
     ax1.set_xticks(df_plot['Data'])
-    ax1.set_xticklabels(df_plot['Data'].dt.strftime('%Y-%m-%d'), rotation=45)
+    ax1.set_xticklabels(df_plot['Data'].dt.strftime("%Y-%m-%d"), rotation=45)
 
     ax2 = ax1.twinx()
     ax2.set_ylabel('Masa ciała (kg)', color='red', fontweight='bold')
@@ -235,7 +235,7 @@ for cwiczenie in wielka_czworka:
     ax1.grid(True, linestyle='--', alpha=0.7)
     
     ax1.set_xticks(df_plot['Data'])
-    ax1.set_xticklabels(df_plot['Data'].dt.strftime('%Y-%m-%d'), rotation=45)
+    ax1.set_xticklabels(df_plot['Data'].dt.strftime("%Y-%m-%d"), rotation=45)
 
     ax2 = ax1.twinx()
     ax2.set_ylabel('Masa ciała (kg)', color='red', fontweight='bold')
@@ -284,7 +284,7 @@ from datetime import datetime
 # 1. Lista ćwiczeń do analizy (możesz tu dodawać kolejne!)
 wielka_czworka = ['Bench Press (Barbell)', 'Front Squat'] 
 
-dzisiejsza_data = datetime.now().strftime('%Y-%m-%d')
+dzisiejsza_data = datetime.now().strftime("%Y-%m-%d")
 
 for cwiczenie in wielka_czworka:
     # 2. Dynamiczne filtrowanie dla konkretnego ćwiczenia
@@ -304,7 +304,7 @@ for cwiczenie in wielka_czworka:
     ax1.grid(True, linestyle='--', alpha=0.7)
     
     ax1.set_xticks(df_plot['Data'])
-    ax1.set_xticklabels(df_plot['Data'].dt.strftime('%Y-%m-%d'), rotation=45)
+    ax1.set_xticklabels(df_plot['Data'].dt.strftime("%Y-%m-%d"), rotation=45)
 
     ax2 = ax1.twinx()
     ax2.set_ylabel('Masa ciała (kg)', color='red', fontweight='bold')
@@ -355,7 +355,7 @@ wielka_czworka = ['Bench Press (Barbell)', 'Front Squat']
 
 df_dzienne_podsumowanie = df_dzienne_podsumowanie[df_dzienne_podsumowanie['Data'] >= '2026-08-01']
 
-dzisiejsza_data = datetime.now().strftime('%Y-%m-%d')
+dzisiejsza_data = datetime.now().strftime("%Y-%m-%d")
 
 for cwiczenie in wielka_czworka:
     # 2. Dynamiczne filtrowanie dla konkretnego ćwiczenia
@@ -375,7 +375,7 @@ for cwiczenie in wielka_czworka:
     ax1.grid(True, linestyle='--', alpha=0.7)
     
     ax1.set_xticks(df_plot['Data'])
-    ax1.set_xticklabels(df_plot['Data'].dt.strftime('%Y-%m-%d'), rotation=45)
+    ax1.set_xticklabels(df_plot['Data'].dt.strftime("%Y-%m-%d"), rotation=45)
 
     ax2 = ax1.twinx()
     ax2.set_ylabel('Masa ciała (kg)', color='red', fontweight='bold')
@@ -450,7 +450,7 @@ for i, cwiczenie in enumerate(wielka_czworka):
 
     # Ustawiamy skrócony format dat, żeby zmieściły się w mniejszych okienkach
     ax1.set_xticks(df_plot['Data'])
-    ax1.set_xticklabels(df_plot['Data'].dt.strftime('%m-%d'), rotation=45)
+    ax1.set_xticklabels(df_plot['Data'].dt.strftime("%m-%d"), rotation=45)
 
     # --- PRAWA OŚ (MASA CIAŁA) ---
     ax2 = ax1.twinx()
@@ -519,7 +519,7 @@ for i, cwiczenie in enumerate(wielka_czworka):
 
     # Ustawiamy skrócony format dat, żeby zmieściły się w mniejszych okienkach
     ax1.set_xticks(df_plot['Data'])
-    ax1.set_xticklabels(df_plot['Data'].dt.strftime('%m-%d'), rotation=45)
+    ax1.set_xticklabels(df_plot['Data'].dt.strftime("%m-%d"), rotation=45)
 
     # --- PRAWA OŚ (MASA CIAŁA) ---
     ax2 = ax1.twinx()
@@ -605,7 +605,7 @@ for i, cwiczenie in enumerate(wielka_czworka):
 
     # Ustawiamy skrócony format dat, żeby zmieściły się w mniejszych okienkach
     ax1.set_xticks(df_plot['Data'])
-    ax1.set_xticklabels(df_plot['Data'].dt.strftime('%d-%m'), rotation=45)
+    ax1.set_xticklabels(df_plot['Data'].dt.strftime("%d-%m"), rotation=45)
     ax1.set_xlabel('Data treningu', fontweight='bold')
 
     # --- PRAWA OŚ (MASA CIAŁA) ---
@@ -707,7 +707,7 @@ for i, cwiczenie in enumerate(wielka_czworka):
 
     # Ustawiamy skrócony format dat, żeby zmieściły się w mniejszych okienkach
     ax1.set_xticks(df_plot['Data'])
-    ax1.set_xticklabels(df_plot['Data'].dt.strftime('%d-%m'), rotation=45)
+    ax1.set_xticklabels(df_plot['Data'].dt.strftime("%d-%m"), rotation=45)
     ax1.set_xlabel('Data treningu', fontweight='bold')
 
     # --- PRAWA OŚ (MASA CIAŁA) ---
