@@ -17,7 +17,7 @@ def load_data():
     df['e1RM'] = df['Ciezar_kg'] * (1 + df['Powtorzenia'] / 30)
 
     # Grupowanie dzienne (najlepszy wynik z danego dnia)
-    df_dzienne = df.groupby(['Data'], ['Cwiczenie']).agg(
+    df_dzienne = df.groupby(['Data', 'Cwiczenie']).agg(
         Max_e1RM = ('e1RM', 'max')
     ).reset_index()
     return df_dzienne
@@ -70,4 +70,13 @@ with col2:
         punkt_startowy = model.intercept_
 
         if wspolczynnik_wzrostu > 0:
-            przewidywany_dzien = 
+            przewidywany_dzien = (cel_kg - punkt_startowy) / wspolczynnik_wzrostu
+            data_celu = datetime.fromordinal(int(przewidywany_dzien))
+
+            # Streamlit ma świetny moduł st.metric do wyświetlania pojedynczych statystyk
+            st.metric(label="Obecne tempo wzrostu (tydzień)", value=f'{wspolczynnik_wzrostu * 7:.2f} kg')
+            st.success(f'Prognozowana data osiągniecia celu: {data_celu.strftime("%d-%m-%Y")}')
+        else:
+            st.warning('Wykryto stagnację lub spadki. Zbuduj siłę')
+    else:
+        st.info('Za mało danych do uruchomienia AI')
