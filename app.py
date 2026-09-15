@@ -4,6 +4,32 @@ import plotly.graph_objects as go
 from sklearn.linear_model import LinearRegression
 from datetime import datetime
 
+# nowa funkcja - prawdziwe dane z hevy
+def przygotuj_dane_hevy(sciezka_do_pliku):
+    # wczytanie pliku, hevy używa przecinka jako separatora
+    df = pd.read_csv(sciezka_do_pliku, sep=',')
+
+    # odfiltrowanie rozgrzewek i drop-setów zostawmy tylko robocze serie czyli 'normal'
+    if 'set_type' in df.columns:
+        df = df[df['set_type'] == 'normal']
+
+    # zmiana nazw kolumn na takie, których używa nasz model ML
+    df = df.rename(columns={
+        'start_time': 'Data',
+        'exercise_title': 'Cwiczenie',
+        'weight_kg': 'Ciezar_kg',
+        'reps': 'Powtorzenia'
+    })
+
+    # ograniczenie tylko do potrzebnych kolumn
+    df = df[['Data', 'Cwiczenie', 'Ciezar_kg', 'Powtorzenia']]
+
+    # Ujednolicenie formatu daty (odcięcie godzin treningu)
+    df['Data'] = pd.to_datetime(df['Data']).dt.strftime("%d-%m-%Y")
+    df = df.dropna(subset=['Ciezar_kg', 'Powtorzenia'])
+
+    return df
+
 # 1. ustawienia strony
 st.set_page_config(page_title='Gym Tracker App', layout='wide')
 st.title('Interaktywny Dashboard Treningowy')
@@ -11,9 +37,11 @@ st.title('Interaktywny Dashboard Treningowy')
 # 2. wczytanie danych
 @st.cache_data
 def load_data():
-    df = pd.read_csv('gym_tracker_export.csv', sep=';', encoding='utf-8-sig')
-    # oczyszczanie daty do formatu liczbowego zrozumiałego dla algorytmów
-    df['Data'] = pd.to_datetime(df['Data'].astype(str).str.extract(r'(\d{4}-\d{2}-\d{2})')[0])
+    df = przygotuj_dane_hevy('workouts.csv')
+
+    # zamieniamy tekstową datę na obiekt datetime, żeby wykresy i ML działały poprawnie
+    df['Data'] = pd.to_datetime(df['Data'])
+
     df['e1RM'] = df['Ciezar_kg'] * (1 + df['Powtorzenia'] / 30)
 
     # Grupowanie dzienne (najlepszy wynik z danego dnia)
