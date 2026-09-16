@@ -73,6 +73,22 @@ with col1:
     # Folia 2: Trend
     fig.add_trace(go.Scatter(x=df_plot['Data'], y=df_plot['Trend_1RM'], mode = 'lines', name = '1RM Trend',line=dict(color='cyan', dash = 'dash', width = 2)))
 
+    # nowa folia: Odrzucone treningi (słabsze dni)
+    if len(df_plot) > 1:
+        # Obliczamy próg odcięcia identycznie jak w modelu ML
+        dolna_granica = df_plot['Max_e1RM'].quantile(0.15)
+        outliery = df_plot[df_plot['Max_e1RM'] < dolna_granica]
+        
+        # jeśli znalazł jakieś odrzucone treningi, rysujemy je na czerwono
+        if not outliery.empty:
+            fig.add_trace(go.Scatter(
+                x=outliery['Data'], 
+                y=outliery['Max_e1RM'], 
+                mode='markers', 
+                name='Odrzucone (szum)',
+                marker=dict(color='red', size=10, symbol='x')
+            ))
+
     fig.update_layout(hovermode = 'x unified')
     st.plotly_chart(fig, use_container_width=True)
 
@@ -86,10 +102,20 @@ with col2:
     # ZABEZPIECZENIE: model ML zadziała tylko, jeśli mamy minimum 2 treningi
     if len(df_plot) > 1:
         df_ml = df_plot.dropna(subset = ['Max_e1RM', 'Data']).copy()
-        df_ml['Data_liczbowo'] = df_ml['Data'].apply(lambda x: x.toordinal())
 
-        X = df_ml[['Data_liczbowo']]
-        y = df_ml['Max_e1RM']
+        # Filter który omija zabezpieczenia widnowsa
+        # obliczmy próg obejścia, utnijmy 15% najsłabszych odstających wyników
+        dolna_granica = df_ml['Max_e1RM'].quantile(0.15)
+        df_ml_czyste = df_ml[df_ml['Max_e1RM'] >= dolna_granica].copy()
+
+        # zabezpieczenie, gdyby po ucięciu zostało za mało danych
+        if len(df_ml_czyste) < 2:
+            df_ml_czyste = df_ml
+
+        df_ml_czyste['Data_liczbowo'] = df_ml_czyste['Data'].apply(lambda x: x.toordinal())
+
+        X = df_ml_czyste[['Data_liczbowo']]
+        y = df_ml_czyste['Max_e1RM']
 
         model = LinearRegression()
         model.fit(X, y)
@@ -97,14 +123,16 @@ with col2:
         wspolczynnik_wzrostu = model.coef_[0]
         punkt_startowy = model.intercept_
 
-        if wspolczynnik_wzrostu > 0:
-            przewidywany_dzien = (cel_kg - punkt_startowy) / wspolczynnik_wzrostu
-            data_celu = datetime.fromordinal(int(przewidywany_dzien))
 
-            # Streamlit ma świetny moduł st.metric do wyświetlania pojedynczych statystyk
-            st.metric(label="Obecne tempo wzrostu (tydzień)", value=f'{wspolczynnik_wzrostu * 7:.2f} kg')
-            st.success(f'Prognozowana data osiągniecia celu: {data_celu.strftime("%d-%m-%Y")}')
+        if wspolczynnik_wzrostu > 0:
+             przewidywany_dzien = (cel_kg - punkt_startowy) / wspolczynnik_wzrostu
+             data_celu = datetime.fromordinal(int(przewidywany_dzien))
+
+             # Streamlit ma świetny moduł st.metric do wyświetlania pojedynczych statystyk
+             st.metric(label="Obecne tempo wzrostu (tydzień)", value=f'{wspolczynnik_wzrostu * 7:.2f} kg')
+             st.success(f'Prognozowana data osiągniecia celu: {data_celu.strftime("%d-%m-%Y")}')
         else:
-            st.warning('Wykryto stagnację lub spadki. Zbuduj siłę')
+             st.warning('Wykryto stagnację lub spadki. Zbuduj siłę')
     else:
-        st.info('Za mało danych do uruchomienia AI')
+         st.info('Za mało danych do uruchomienia AI')
+
