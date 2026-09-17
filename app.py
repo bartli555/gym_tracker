@@ -1,8 +1,23 @@
+import sqlite3
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from sklearn.linear_model import LinearRegression
 from datetime import datetime
+
+# conn = sqlite3.connect('db.sqlite3')
+
+# tabele = pd.read_sql('SELECT name FROM sqlite_master WHERE type="table";', conn)
+
+# st.subheader('Rekonesans bazy')
+# st.write('Dostępne tabele: ')
+# st.dataframe(tabele)
+
+# st.subheader("Struktura: workout_workout")
+# st.dataframe(pd.read_sql("PRAGMA table_info(workout_workout);", conn))
+
+# st.subheader("Struktura: workout_trainingset")
+# st.dataframe(pd.read_sql("PRAGMA table_info(workout_trainingset);", conn))
 
 # nowa funkcja - prawdziwe dane z hevy
 def przygotuj_dane_hevy(sciezka_do_pliku):
@@ -37,20 +52,49 @@ st.title('Interaktywny Dashboard Treningowy')
 # 2. wczytanie danych
 @st.cache_data
 def load_data():
-    df = przygotuj_dane_hevy('workouts.csv')
+    # podłączenie do bazy
+    conn = sqlite3.connect('db.sqlite3')
 
-    # zamieniamy tekstową datę na obiekt datetime, żeby wykresy i ML działały poprawnie
+    # zapytanie sql łączące trening z seriami
+    query = """
+        SELECT
+            w.date as Data,
+            s.exercise as Cwiczenie,
+            s.weight as Ciezar_kg,
+            s.reps as Powtorzenia
+        FROM workout_trainingset s
+        JOIN workout_workout w ON s.workout_id = w.id
+    """
+    df = pd.read_sql(query, conn)
+
+    # zamykamy połączenie
+    conn.close()
+
+    # formaty i obliczenia ML
     df['Data'] = pd.to_datetime(df['Data'])
-
     df['e1RM'] = df['Ciezar_kg'] * (1 + df['Powtorzenia'] / 30)
 
     # Grupowanie dzienne (najlepszy wynik z danego dnia)
     df_dzienne = df.groupby(['Data', 'Cwiczenie']).agg(
-        Max_e1RM = ('e1RM', 'max')
-    ).reset_index()
+         Max_e1RM = ('e1RM', 'max')
+     ).reset_index()
     return df_dzienne
 
 df = load_data()
+#     df = przygotuj_dane_hevy('workouts.csv')
+
+#     # zamieniamy tekstową datę na obiekt datetime, żeby wykresy i ML działały poprawnie
+#     df['Data'] = pd.to_datetime(df['Data'])
+
+#     df['e1RM'] = df['Ciezar_kg'] * (1 + df['Powtorzenia'] / 30)
+
+#     # Grupowanie dzienne (najlepszy wynik z danego dnia)
+#     df_dzienne = df.groupby(['Data', 'Cwiczenie']).agg(
+#         Max_e1RM = ('e1RM', 'max')
+#     ).reset_index()
+#     return df_dzienne
+
+# df = load_data()
 
 # 3. interfejs - menu
 st.markdown('---')
