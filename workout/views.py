@@ -477,3 +477,7 @@ def export_workouts_csv(request):
                epley_1rm
           ])
      return response
+
+@login_required
+def advanced_stats(request):
+    return render(request, 'workout/advanced_stats.html')

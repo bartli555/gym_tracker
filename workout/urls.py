@@ -16,6 +16,7 @@ urlpatterns = [
     path('import-wagi/', views.upload_hevy_measurements, name='upload_hevy_measurements'),
     path('generate-dict/', views.generate_exercise_dictionary, name='generate_exercise_dictionary'),
     path('wall_of_fame/', views.wall_of_fame, name='wall_of_fame'),
-    path('export-csv/', views.export_workouts_csv, name='export_workouts_csv')
+    path('export-csv/', views.export_workouts_csv, name='export_workouts_csv'),
+    path('zaawansowane-statystyki/', views.advanced_stats, name='advanced_stats')
 ]
 

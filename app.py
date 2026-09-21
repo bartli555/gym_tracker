@@ -2,7 +2,7 @@ import sqlite3
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from sklearn.linear_model import LinearRegression
+import numpy as np
 from datetime import datetime
 
 # conn = sqlite3.connect('db.sqlite3')
@@ -158,15 +158,10 @@ with col2:
 
         df_ml_czyste['Data_liczbowo'] = df_ml_czyste['Data'].apply(lambda x: x.toordinal())
 
-        X = df_ml_czyste[['Data_liczbowo']]
+        X = df_ml_czyste['Data_liczbowo']
         y = df_ml_czyste['Max_e1RM']
 
-        model = LinearRegression()
-        model.fit(X, y)
-
-        wspolczynnik_wzrostu = model.coef_[0]
-        punkt_startowy = model.intercept_
-
+        wspolczynnik_wzrostu, punkt_startowy = np.polyfit(X, y, 1)
 
         if wspolczynnik_wzrostu > 0:
              przewidywany_dzien = (cel_kg - punkt_startowy) / wspolczynnik_wzrostu

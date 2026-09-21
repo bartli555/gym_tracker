@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Gym Tracker - Zaawansowany model statystyczny</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        
+        <!-- Identyczne tło jak na stronie głównej -->
+        <style>
+            body {
+                background-image: 
+                    linear-gradient(rgba(240, 245, 245, 0.85), rgba(240, 245, 245, 0.85)), 
+                    url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Arnold_Schwarzenegger_1974.jpg/500px-Arnold_Schwarzenegger_1974.jpg');
+                background-size: cover;
+                background-position: center top;
+                background-attachment: fixed;
+                background-repeat: no-repeat;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container mt-5">
+            
+            <!-- PASEK GÓRNY -->
+            <div class="row align-items-center mb-5">
+                <div class="col-md-7">
+                    <h1 class="display-5 fw-bold text-dark mb-0">Zaawansowana Analityka</h1>
+                    <h2 class="text-muted fs-5">Moduł predykcyjny oparty na uczeniu maszynowym (Numpy)</h2>
+                </div>
+                <div class="col-md-5 d-flex justify-content-md-end justify-content-start flex-wrap gap-2 mt-3 mt-md-0">
+                    <a href="{% url 'dashboard' %}" class="btn btn-dark shadow-sm fw-bold">&laquo; Wróć do Dashboardu</a>
+                    <form action="{% url 'logout' %}" method="POST" class="ms-md-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-dark fw-bold shadow-sm">Wyloguj</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RAMKA ZE STREAMLITEM -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow border-0 h-100 bg-white bg-opacity-75 p-2">
+                        <div class="card-body p-0">
+                            <!-- Streamlit działający w tle na porcie 8501 -->
+                            <iframe src="http://localhost:8501" width="100%" height="850px" style="border:none; border-radius: 8px;"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div> 
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>
