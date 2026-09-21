@@ -1,4 +1,7 @@
+django
 pandas
 plotly
 scikit-learn
 matplotlib
+streamlit
+numpy
